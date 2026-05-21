@@ -10,10 +10,10 @@ export default function DashboardShell({
   children,
 }: DashboardShellProps) {
   return (
-    <div className="min-h-screen bg-[#f4f7fb]">
+    <div className="min-h-screen bg-[#f7f9fc]">
       <Navbar />
 
-      <main className="p-8">
+      <main className="p-6">
         {children}
       </main>
     </div>

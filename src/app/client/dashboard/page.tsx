@@ -40,13 +40,13 @@ export default function ClientDashboard() {
     ]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
 
         {/* HEADER */}
 <div className="space-y-6">
   {/* TITLE */}
   <div>
-    <h1 className="text-4xl font-bold text-[#071739]">
+    <h1 className="text-3xl font-bold text-[#071739]">
       Client Dashboard
     </h1>
 
@@ -56,7 +56,7 @@ export default function ClientDashboard() {
   </div>
 
   {/* QUICK ACTIONS */}
-  <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+  <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_8px_rgba(15,23,42,0.04)] p-5 flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
     
     {/* LINK INPUT */}
     <div className="flex flex-1 gap-3">
@@ -87,25 +87,25 @@ export default function ClientDashboard() {
     
 
       {/* TOP CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* TOTAL */}
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-6 shadow-[0_2px_8px_rgba(15,23,42,0.04)] border border-gray-100">
           <p className="text-gray-500 text-sm font-medium">
             Total Cases
           </p>
 
-          <h2 className="text-4xl font-bold mt-4 text-[#071739]">
+          <h2 className="text-3xl font-bold mt-4 text-[#071739]">
             {studies.length}
           </h2>
         </div>
 
         {/* READY */}
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-6 shadow-[0_2px_8px_rgba(15,23,42,0.04)] border border-gray-100">
           <p className="text-gray-500 text-sm font-medium">
             Ready Cases
           </p>
 
-          <h2 className="text-4xl font-bold mt-4 text-green-600">
+          <h2 className="text-3xl font-bold mt-4 text-green-600">
             {
               studies.filter(
                 (study) =>
@@ -116,12 +116,12 @@ export default function ClientDashboard() {
         </div>
 
         {/* PENDING */}
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-6 shadow-[0_2px_8px_rgba(15,23,42,0.04)] border border-gray-100">
           <p className="text-gray-500 text-sm font-medium">
             Pending Cases
           </p>
 
-          <h2 className="text-4xl font-bold mt-4 text-yellow-500">
+          <h2 className="text-3xl font-bold mt-4 text-yellow-500">
             {
               studies.filter(
                 (study) =>
@@ -133,7 +133,7 @@ export default function ClientDashboard() {
       </div>
 
       {/* WORKLIST */}
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(15,23,42,0.04)] border border-gray-100 overflow-hidden">
         {/* SEARCH + FILTER */}
         <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="relative w-full md:w-96">
@@ -233,7 +233,7 @@ export default function ClientDashboard() {
 
                   <td className="px-6 py-5">
                     <span
-                      className={`px-4 py-1.5 rounded-full text-xs font-semibold ${
+                      className={`px-4 py-1.5 rounded-xl text-xs font-semibold ${
                         study.status === "READY"
                           ? "bg-green-100 text-green-700"
                           : study.status ===
@@ -314,7 +314,7 @@ export default function ClientDashboard() {
             {/* OPTIONS */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* MANUAL */}
-              <button className="border border-gray-200 rounded-3xl p-8 text-left hover:border-blue-500 hover:bg-blue-50 transition">
+              <button className="border border-gray-200 rounded-2xl p-6 text-left hover:border-blue-500 hover:bg-blue-50 transition">
                 <h3 className="text-xl font-semibold text-[#071739]">
                   Manual Entry
                 </h3>
@@ -327,7 +327,7 @@ export default function ClientDashboard() {
               </button>
 
               {/* LINK */}
-              <button className="border border-gray-200 rounded-3xl p-8 text-left hover:border-blue-500 hover:bg-blue-50 transition">
+              <button className="border border-gray-200 rounded-2xl p-6 text-left hover:border-blue-500 hover:bg-blue-50 transition">
                 <h3 className="text-xl font-semibold text-[#071739]">
                   Imaging Link Upload
                 </h3>

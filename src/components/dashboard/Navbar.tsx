@@ -1,48 +1,65 @@
-import { Bell, LogOut } from "lucide-react";
+import Image from "next/image";
+
+import {
+  Bell,
+  LogOut,
+} from "lucide-react";
 
 export default function Navbar() {
   return (
-    <div className="h-18 bg-[#071739] border-b border-white/10 flex items-center justify-between px-6 text-white shadow-sm">
+    <div className="h-16 bg-[#071739] border-b border-white/10 flex items-center justify-between px-6">
       {/* LEFT */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-wide">
-          MEDVIRTUOSO
-        </h1>
+      <div className="flex items-center gap-4">
+        <Image
+          src="/logo/logo.png"
+          alt="MedVirtuoso Logo"
+          width={52}
+height={52}
+          
+          priority
+          className="rounded-md"
+        />
 
-        <p className="text-sm text-blue-100 mt-1">
-          MedMarvel Software Solutions
-        </p>
+        <div>
+          <h1 className="text-lg font-semibold tracking-wide text-white">
+            MEDVIRTUOSO
+          </h1>
+
+          <p className="text-[11px] text-blue-100">
+            MedMarvel Software Solutions
+          </p>
+        </div>
       </div>
 
       {/* RIGHT */}
-      <div className="flex items-center gap-6">
-        {/* NOTIFICATION */}
-        <button className="relative">
-          <Bell size={22} />
+      <div className="flex items-center gap-5">
+        {/* NOTIFICATIONS */}
+        <button className="relative text-white/80 hover:text-white transition">
+          <Bell size={19} />
 
-          <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500"></span>
+          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-xl bg-red-500"></span>
         </button>
 
         {/* USER */}
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-base">
+          <div className="h-9 w-9 rounded-xl bg-blue-600 flex items-center justify-center text-white text-sm font-semibold">
             A
           </div>
 
-          <div>
-            <p className="font-medium">
+          <div className="leading-tight">
+            <p className="text-sm font-medium text-white">
               Amit
             </p>
 
-            <p className="text-sm text-gray-300">
+            <p className="text-xs text-blue-100">
               Client User
             </p>
           </div>
         </div>
 
         {/* LOGOUT */}
-        <button className="flex items-center gap-2 bg-red-500 hover:bg-red-600 px-5 py-3 rounded-xl transition font-medium">
-          <LogOut size={18} />
+        <button className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-sm transition">
+          <LogOut size={16} />
 
           Logout
         </button>
