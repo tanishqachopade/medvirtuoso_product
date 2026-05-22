@@ -2,18 +2,15 @@
   "name": "medvirtuoso_product",
   "version": "0.1.0",
   "private": true,
-
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
-
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
-
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "@tanstack/react-table": "^8.21.3",
@@ -28,9 +25,9 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.76.0",
+    "uuid": "^14.0.0",
     "zod": "^4.4.3"
   },
-
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/jsonwebtoken": "^9.0.10",

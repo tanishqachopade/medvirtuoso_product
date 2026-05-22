@@ -85,8 +85,9 @@ export async function POST(
         },
 
         include: {
-          patient: true,
-        },
+  patient: true,
+  report: true,
+},
       });
 
     return NextResponse.json({
@@ -117,8 +118,9 @@ export async function GET() {
     const studies =
       await prisma.study.findMany({
         include: {
-          patient: true,
-        },
+  patient: true,
+  report: true,
+},
 
         orderBy: {
           createdAt: "desc",

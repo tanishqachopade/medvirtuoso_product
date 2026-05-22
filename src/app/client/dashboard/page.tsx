@@ -655,10 +655,27 @@ export default function ClientDashboard() {
 
                       <button
   disabled={
-    study.status !== "READY"
+    !study.report
   }
+
+  onClick={() => {
+
+    if (
+      study.report?.reportUrl
+    ) {
+
+      window.open(
+        study.report
+          .reportUrl,
+        "_blank"
+      );
+
+    }
+
+  }}
+
   className={`p-2 rounded-lg transition ${
-    study.status === "READY"
+    study.report
       ? "hover:bg-green-50"
       : "opacity-40 cursor-not-allowed"
   }`}
@@ -668,6 +685,8 @@ export default function ClientDashboard() {
     className="text-green-600"
   />
 </button>
+
+                      
 
                       <button
                         onClick={() =>
