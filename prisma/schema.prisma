@@ -7,71 +7,127 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
+enum UserRole {
   CLIENT
   OPERATOR
+  ADMIN
 }
 
 enum StudyStatus {
   UPLOADED
   PROCESSING
-  DONE
-  FAILED
+  READY
+}
+
+model Institution {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  sites Site[]
+  users User[]
+}
+
+model Site {
+  id            String   @id @default(cuid())
+  name          String
+  institutionId String
+  createdAt     DateTime @default(now())
+
+  institution Institution @relation(fields: [institutionId], references: [id])
+
+  studies Study[]
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  password      String
+  role          UserRole
+  institutionId String
+  createdAt     DateTime @default(now())
 
-  studies   Study[]
+  institution Institution @relation(fields: [institutionId], references: [id])
 
-  createdAt DateTime @default(now())
+  studies Study[]
+  comments StudyComment[]
 }
 
 model Patient {
   id          String   @id @default(cuid())
-  patientId   String   @unique
-  fullName    String
-  age         Int
-  gender      String
-
-  studies     Study[]
-
+  patientId   String
+  patientName String
   createdAt   DateTime @default(now())
+
+  studies Study[]
 }
 
 model Study {
-  id            String       @id @default(cuid())
+  id               String      @id @default(cuid())
+  studyDescription String
+  modality         String
+  status           StudyStatus @default(UPLOADED)
 
-  modality      String
-  description   String?
-  status        StudyStatus  @default(UPLOADED)
+  patientId String
+  siteId    String
+  userId    String
 
-  imagingLink   String?
+  imagingLink String?
 
-  s3Path        String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  userId        String
-  user          User         @relation(fields: [userId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id])
 
-  patientId     String
-  patient       Patient      @relation(fields: [patientId], references: [id])
+  site Site @relation(fields: [siteId], references: [id])
 
-  report        Report?
+  user User @relation(fields: [userId], references: [id])
 
-  createdAt     DateTime @default(now())
+  files StudyFile[]
+
+  report Report?
+
+  comments StudyComment[]
+}
+
+model StudyFile {
+  id String @id @default(cuid())
+
+  studyId String
+
+  fileName String
+  fileUrl  String
+  fileType String
+
+  createdAt DateTime @default(now())
+
+  study Study @relation(fields: [studyId], references: [id])
 }
 
 model Report {
-  id          String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  filePath    String
+  studyId String @unique
 
-  studyId     String   @unique
-  study       Study    @relation(fields: [studyId], references: [id])
+  reportUrl String
 
-  createdAt   DateTime @default(now())
+  uploadedAt DateTime @default(now())
+
+  study Study @relation(fields: [studyId], references: [id])
+}
+
+model StudyComment {
+  id String @id @default(cuid())
+
+  studyId String
+  userId  String
+
+  message String
+
+  createdAt DateTime @default(now())
+
+  study Study @relation(fields: [studyId], references: [id])
+
+  user User @relation(fields: [userId], references: [id])
 }

@@ -2,7 +2,10 @@
 
 import WorklistToolbar from "@/components/client-dashboard/WorklistToolbar";
 
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import {
   Search,
@@ -16,28 +19,355 @@ export default function ClientDashboard() {
   const [showModal, setShowModal] =
     useState(false);
 
-  const [studies, setStudies] =
-    useState([
-      {
-        id: "P-1001",
-        patientName: "John Doe",
-        studyDescription: "MRI Brain",
-        modality: "MRI",
-        status: "READY",
-        datetime:
-          "21 May 2026, 10:30 AM",
-      },
+  const [editingStudyId, setEditingStudyId] =
+    useState<string | null>(null);
 
-      {
-        id: "P-1002",
-        patientName: "Sarah Smith",
-        studyDescription: "CT Chest",
-        modality: "CT",
-        status: "PROCESSING",
-        datetime:
-          "21 May 2026, 11:15 AM",
-      },
-    ]);
+  // COMMENTS STATES
+  const [
+    showCommentsModal,
+    setShowCommentsModal,
+  ] = useState(false);
+
+  const [
+    selectedStudyId,
+    setSelectedStudyId,
+  ] = useState<string | null>(
+    null
+  );
+
+  const [comments, setComments] =
+    useState<any[]>([]);
+
+  const [message, setMessage] =
+    useState("");
+
+  const [
+    commentsLoading,
+    setCommentsLoading,
+  ] = useState(false);
+
+  // FORM STATES
+  const [patientId, setPatientId] =
+    useState("");
+
+  const [
+    patientName,
+    setPatientName,
+  ] = useState("");
+
+  const [
+    studyDescription,
+    setStudyDescription,
+  ] = useState("");
+
+  const [modality, setModality] =
+    useState("");
+
+  const [
+    imagingLink,
+    setImagingLink,
+  ] = useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  // DATABASE STUDIES
+  const [studies, setStudies] =
+    useState<any[]>([]);
+
+  // =========================
+  // FETCH STUDIES
+  // =========================
+  async function fetchStudies() {
+    try {
+      const response =
+        await fetch(
+          "/api/studies"
+        );
+
+      const data =
+        await response.json();
+
+      setStudies(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(() => {
+    fetchStudies();
+  }, []);
+
+  // =========================
+  // FETCH COMMENTS
+  // =========================
+  async function fetchComments(
+    studyId: string
+  ) {
+    try {
+      const response =
+        await fetch(
+          `/api/studies/${studyId}/comments`
+        );
+
+      const data =
+        await response.json();
+
+      setComments(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // =========================
+  // OPEN COMMENTS
+  // =========================
+  async function openComments(
+    studyId: string
+  ) {
+    setSelectedStudyId(
+      studyId
+    );
+
+    setShowCommentsModal(true);
+
+    await fetchComments(
+      studyId
+    );
+  }
+
+  // =========================
+  // SEND MESSAGE
+  // =========================
+  async function handleSendMessage() {
+    try {
+      if (
+        !message ||
+        !selectedStudyId
+      ) {
+        return;
+      }
+
+      setCommentsLoading(true);
+
+      const response =
+        await fetch(
+          `/api/studies/${selectedStudyId}/comments`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              message,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        alert(data.error);
+
+        return;
+      }
+
+      setMessage("");
+
+      await fetchComments(
+        selectedStudyId
+      );
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "Failed to send message"
+      );
+    } finally {
+      setCommentsLoading(false);
+    }
+  }
+
+  // =========================
+  // EDIT FUNCTION
+  // =========================
+  function handleEdit(
+    study: any
+  ) {
+    setEditingStudyId(
+      study.id
+    );
+
+    setPatientId(
+      study.patient?.patientId ||
+        ""
+    );
+
+    setPatientName(
+      study.patient
+        ?.patientName || ""
+    );
+
+    setStudyDescription(
+      study.studyDescription ||
+        ""
+    );
+
+    setModality(
+      study.modality || ""
+    );
+
+    setImagingLink(
+      study.imagingLink || ""
+    );
+
+    setShowModal(true);
+  }
+
+  // =========================
+  // DELETE FUNCTION
+  // =========================
+  async function handleDelete(
+    id: string
+  ) {
+    try {
+      const response =
+        await fetch(
+          `/api/studies/${id}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        alert(data.error);
+
+        return;
+      }
+
+      await fetchStudies();
+
+      alert(
+        "Study deleted successfully"
+      );
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "Failed to delete study"
+      );
+    }
+  }
+
+  // =========================
+  // SUBMIT FUNCTION
+  // =========================
+  async function handleSubmit() {
+    try {
+      setLoading(true);
+
+      // UPDATE
+      if (editingStudyId) {
+        const response =
+          await fetch(
+            `/api/studies/${editingStudyId}`,
+            {
+              method: "PATCH",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                patientName,
+                studyDescription,
+                modality,
+                imagingLink,
+              }),
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          alert(data.error);
+
+          return;
+        }
+
+        alert(
+          "Study updated successfully"
+        );
+      }
+
+      // CREATE
+      else {
+        const response =
+          await fetch(
+            "/api/studies",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                patientId,
+                patientName,
+                studyDescription,
+                modality,
+                imagingLink,
+              }),
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          alert(data.error);
+
+          return;
+        }
+
+        alert(
+          "Study created successfully"
+        );
+      }
+
+      await fetchStudies();
+
+      // RESET
+      setPatientId("");
+      setPatientName("");
+      setStudyDescription("");
+      setModality("");
+      setImagingLink("");
+
+      setEditingStudyId(null);
+
+      setShowModal(false);
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        "Something went wrong"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -49,16 +379,15 @@ export default function ClientDashboard() {
 
       {/* WORKLIST */}
       <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(15,23,42,0.04)] border border-gray-100 overflow-hidden">
-        
-        {/* WORKLIST HEADER */}
+
+        {/* HEADER */}
         <div className="p-5 border-b border-gray-100">
-          
-          {/* TOP ROW */}
+
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
 
             {/* LEFT */}
             <div className="space-y-4 flex-1">
-              
+
               <h2 className="text-xl font-semibold text-[#071739]">
                 Worklist
               </h2>
@@ -80,41 +409,49 @@ export default function ClientDashboard() {
 
             {/* RIGHT */}
             <div className="flex items-center gap-3 self-start">
-              
-              {/* TOTAL */}
+
               <div className="bg-[#f7f9fc] px-5 py-3 rounded-xl border border-gray-100 min-w-[95px]">
                 <p className="text-xs text-gray-500">
                   Total
                 </p>
 
                 <p className="text-base font-semibold text-[#071739]">
-                  24
+                  {studies.length}
                 </p>
               </div>
 
-              {/* READY */}
               <div className="bg-[#f7f9fc] px-5 py-3 rounded-xl border border-gray-100 min-w-[95px]">
                 <p className="text-xs text-gray-500">
                   Ready
                 </p>
 
                 <p className="text-base font-semibold text-green-600">
-                  10
+                  {
+                    studies.filter(
+                      (s) =>
+                        s.status ===
+                        "READY"
+                    ).length
+                  }
                 </p>
               </div>
 
-              {/* PENDING */}
               <div className="bg-[#f7f9fc] px-5 py-3 rounded-xl border border-gray-100 min-w-[95px]">
                 <p className="text-xs text-gray-500">
                   Pending
                 </p>
 
                 <p className="text-base font-semibold text-yellow-600">
-                  14
+                  {
+                    studies.filter(
+                      (s) =>
+                        s.status !==
+                        "READY"
+                    ).length
+                  }
                 </p>
               </div>
 
-              {/* FILTER */}
               <button className="border border-gray-200 hover:bg-gray-50 px-4 py-3 rounded-xl text-sm transition">
                 Filter
               </button>
@@ -164,11 +501,11 @@ export default function ClientDashboard() {
                   className="border-t border-gray-100 hover:bg-[#fafcff] transition"
                 >
                   <td className="px-6 py-4 text-sm font-medium text-gray-700">
-                    {study.id}
+                    {study.patient?.patientId}
                   </td>
 
                   <td className="px-6 py-4 text-sm font-semibold text-[#071739]">
-                    {study.patientName}
+                    {study.patient?.patientName}
                   </td>
 
                   <td className="px-6 py-4 text-sm text-gray-700">
@@ -184,7 +521,8 @@ export default function ClientDashboard() {
                   <td className="px-6 py-4">
                     <span
                       className={`px-3 py-1 rounded-xl text-xs font-semibold ${
-                        study.status === "READY"
+                        study.status ===
+                        "READY"
                           ? "bg-green-100 text-green-700"
                           : study.status ===
                             "PROCESSING"
@@ -197,13 +535,14 @@ export default function ClientDashboard() {
                   </td>
 
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    {study.datetime}
+                    {new Date(
+                      study.createdAt
+                    ).toLocaleString()}
                   </td>
 
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      
-                      {/* VIEW */}
+
                       <button className="p-2 rounded-lg hover:bg-blue-50 transition">
                         <Eye
                           size={17}
@@ -211,24 +550,42 @@ export default function ClientDashboard() {
                         />
                       </button>
 
-                      {/* EDIT */}
-                      <button className="p-2 rounded-lg hover:bg-yellow-50 transition">
+                      <button
+                        onClick={() =>
+                          handleEdit(
+                            study
+                          )
+                        }
+                        className="p-2 rounded-lg hover:bg-yellow-50 transition"
+                      >
                         <Pencil
                           size={17}
                           className="text-yellow-600"
                         />
                       </button>
 
-                      {/* NOTES */}
-                      <button className="p-2 rounded-lg hover:bg-purple-50 transition">
+                      <button
+                        onClick={() =>
+                          openComments(
+                            study.id
+                          )
+                        }
+                        className="p-2 rounded-lg hover:bg-purple-50 transition"
+                      >
                         <MessageSquare
                           size={17}
                           className="text-purple-600"
                         />
                       </button>
 
-                      {/* DELETE */}
-                      <button className="p-2 rounded-lg hover:bg-red-50 transition">
+                      <button
+                        onClick={() =>
+                          handleDelete(
+                            study.id
+                          )
+                        }
+                        className="p-2 rounded-lg hover:bg-red-50 transition"
+                      >
                         <Trash2
                           size={17}
                           className="text-red-600"
@@ -243,16 +600,18 @@ export default function ClientDashboard() {
         </div>
       </div>
 
-      {/* MODAL */}
+      {/* ADD / EDIT MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+
           <div className="bg-white w-full max-w-4xl rounded-[28px] p-8 shadow-2xl border border-gray-100 overflow-y-auto max-h-[90vh]">
-            
-            {/* HEADER */}
+
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-2xl font-semibold text-[#071739]">
-                  Add New Case
+                  {editingStudyId
+                    ? "Edit Study"
+                    : "Add New Case"}
                 </h2>
 
                 <p className="text-sm text-gray-500 mt-1">
@@ -261,9 +620,13 @@ export default function ClientDashboard() {
               </div>
 
               <button
-                onClick={() =>
-                  setShowModal(false)
-                }
+                onClick={() => {
+                  setShowModal(false);
+
+                  setEditingStudyId(
+                    null
+                  );
+                }}
                 className="text-gray-400 hover:text-black text-2xl"
               >
                 ✕
@@ -271,26 +634,6 @@ export default function ClientDashboard() {
             </div>
 
             <div className="space-y-8">
-              
-              {/* DOCUMENTS */}
-              <div>
-                <h3 className="text-lg font-semibold text-[#071739] mb-3">
-                  Upload Documents
-                </h3>
-
-                <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center bg-[#fafcff]">
-                  <p className="text-sm text-gray-600">
-                    Upload consent forms, clinical history, CRF,
-                    PDFs, images, DOCX, etc.
-                  </p>
-
-                  <input
-                    type="file"
-                    multiple
-                    className="mt-4"
-                  />
-                </div>
-              </div>
 
               {/* IMAGING LINK */}
               <div>
@@ -301,38 +644,59 @@ export default function ClientDashboard() {
                 <input
                   type="text"
                   placeholder="Paste imaging link (optional)"
-                  className="w-full border border-gray-200 rounded-2xl px-5 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                  value={imagingLink}
+                  onChange={(e) =>
+                    setImagingLink(
+                      e.target.value
+                    )
+                  }
+                  className="w-full border border-gray-200 rounded-2xl px-5 py-3 text-sm"
                 />
               </div>
 
-              {/* MANUAL ENTRY */}
+              {/* DETAILS */}
               <div>
                 <h3 className="text-lg font-semibold text-[#071739] mb-5">
                   Manual Entry Details
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
                   <input
                     type="text"
                     placeholder="Patient ID"
+                    value={patientId}
+                    onChange={(e) =>
+                      setPatientId(
+                        e.target.value
+                      )
+                    }
                     className="border border-gray-200 rounded-2xl px-5 py-3 text-sm"
                   />
 
                   <input
                     type="text"
                     placeholder="Patient Name"
+                    value={patientName}
+                    onChange={(e) =>
+                      setPatientName(
+                        e.target.value
+                      )
+                    }
                     className="border border-gray-200 rounded-2xl px-5 py-3 text-sm"
                   />
 
                   <input
                     type="text"
                     placeholder="Study Description"
-                    className="border border-gray-200 rounded-2xl px-5 py-3 text-sm"
-                  />
-
-                  <input
-                    type="text"
-                    placeholder="Institution ID"
+                    value={
+                      studyDescription
+                    }
+                    onChange={(e) =>
+                      setStudyDescription(
+                        e.target.value
+                      )
+                    }
                     className="border border-gray-200 rounded-2xl px-5 py-3 text-sm"
                   />
                 </div>
@@ -350,33 +714,151 @@ export default function ClientDashboard() {
                     "PET",
                     "DWI",
                     "OTHER",
-                  ].map((modality) => (
-                    <div
-                      key={modality}
-                      className="border border-gray-200 rounded-2xl p-5 flex items-center justify-between"
+                  ].map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() =>
+                        setModality(
+                          item
+                        )
+                      }
+                      className={`border rounded-2xl p-5 flex items-center justify-between transition ${
+                        modality === item
+                          ? "border-blue-600 bg-blue-50"
+                          : "border-gray-200"
+                      }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                        />
-
-                        <p className="text-sm font-medium text-[#071739]">
-                          {modality}
-                        </p>
-                      </div>
+                      <p className="text-sm font-medium text-[#071739]">
+                        {item}
+                      </p>
 
                       <input
                         type="file"
                         className="text-xs"
                       />
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
 
               {/* SUBMIT */}
-              <button className="w-full bg-[#071739] hover:bg-[#0b2559] text-white py-3 rounded-2xl font-medium transition">
-                Submit Case
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full bg-[#071739] hover:bg-[#0b2559] text-white py-3 rounded-2xl font-medium transition disabled:opacity-50"
+              >
+                {loading
+                  ? editingStudyId
+                    ? "Updating Study..."
+                    : "Creating Study..."
+                  : editingStudyId
+                  ? "Update Study"
+                  : "Submit Case"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* COMMENTS MODAL */}
+      {showCommentsModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+
+          <div className="bg-white w-full max-w-2xl rounded-[28px] shadow-2xl border border-gray-100 flex flex-col max-h-[85vh]">
+
+            {/* HEADER */}
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-[#071739]">
+                  Study Notes
+                </h2>
+
+                <p className="text-sm text-gray-500 mt-1">
+                  Client ↔ Operator communication
+                </p>
+              </div>
+
+              <button
+                onClick={() =>
+                  setShowCommentsModal(
+                    false
+                  )
+                }
+                className="text-gray-400 hover:text-black text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* MESSAGES */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#fafcff]">
+
+              {comments.length ===
+                0 && (
+                <p className="text-sm text-gray-500">
+                  No messages yet.
+                </p>
+              )}
+
+              {comments.map(
+                (comment) => (
+                  <div
+                    key={comment.id}
+                    className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-semibold text-[#071739]">
+                        {
+                          comment.user
+                            ?.name
+                        }
+                      </p>
+
+                      <p className="text-xs text-gray-400">
+                        {new Date(
+                          comment.createdAt
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+
+                    <p className="text-sm text-gray-700">
+                      {
+                        comment.message
+                      }
+                    </p>
+                  </div>
+                )
+              )}
+            </div>
+
+            {/* INPUT */}
+            <div className="p-5 border-t border-gray-100 flex gap-3">
+
+              <input
+                type="text"
+                placeholder="Write a message..."
+                value={message}
+                onChange={(e) =>
+                  setMessage(
+                    e.target.value
+                  )
+                }
+                className="flex-1 border border-gray-200 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              />
+
+              <button
+                onClick={
+                  handleSendMessage
+                }
+                disabled={
+                  commentsLoading
+                }
+                className="bg-[#071739] hover:bg-[#0b2559] text-white px-6 rounded-2xl text-sm font-medium transition"
+              >
+                {commentsLoading
+                  ? "Sending..."
+                  : "Send"}
               </button>
             </div>
           </div>
