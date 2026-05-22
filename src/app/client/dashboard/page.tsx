@@ -1,13 +1,15 @@
 "use client";
 
+import WorklistToolbar from "@/components/client-dashboard/WorklistToolbar";
+
 import { useState } from "react";
 
 import {
   Search,
-  Plus,
   Eye,
   Pencil,
   Trash2,
+  MessageSquare,
 } from "lucide-react";
 
 export default function ClientDashboard() {
@@ -22,7 +24,6 @@ export default function ClientDashboard() {
         studyDescription: "MRI Brain",
         modality: "MRI",
         status: "READY",
-        notes: "Stroke evaluation",
         datetime:
           "21 May 2026, 10:30 AM",
       },
@@ -33,7 +34,6 @@ export default function ClientDashboard() {
         studyDescription: "CT Chest",
         modality: "CT",
         status: "PROCESSING",
-        notes: "Pulmonary screening",
         datetime:
           "21 May 2026, 11:15 AM",
       },
@@ -41,101 +41,17 @@ export default function ClientDashboard() {
 
   return (
     <div className="space-y-6">
-
-        {/* HEADER */}
-<div className="space-y-6">
-  {/* TITLE */}
-  <div>
-    <h1 className="text-3xl font-bold text-[#071739]">
-      Client Dashboard
-    </h1>
-
-    <p className="text-gray-500 mt-2 text-base">
-      Manage studies and track reports
-    </p>
-  </div>
-
-  {/* QUICK ACTIONS */}
-  <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_8px_rgba(15,23,42,0.04)] p-5 flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
-    
-    {/* LINK INPUT */}
-    <div className="flex flex-1 gap-3">
-      <input
-        type="text"
-        placeholder="Paste PACS / Drive / Imaging Link"
-        className="flex-1 border border-gray-200 rounded-2xl px-5 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+      <WorklistToolbar
+        onAddCase={() =>
+          setShowModal(true)
+        }
       />
-
-      <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-medium transition">
-        Submit Link
-      </button>
-    </div>
-
-    {/* MANUAL ENTRY BUTTON */}
-    <button
-      onClick={() =>
-        setShowModal(true)
-      }
-      className="flex items-center justify-center gap-2 bg-[#071739] hover:bg-[#0b2559] text-white px-6 py-3 rounded-2xl font-medium transition whitespace-nowrap"
-    >
-      <Plus size={18} />
-
-      Manual Entry
-    </button>
-  </div>
-</div>
-    
-
-      {/* TOP CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* TOTAL */}
-        <div className="bg-white rounded-2xl p-6 shadow-[0_2px_8px_rgba(15,23,42,0.04)] border border-gray-100">
-          <p className="text-gray-500 text-sm font-medium">
-            Total Cases
-          </p>
-
-          <h2 className="text-3xl font-bold mt-4 text-[#071739]">
-            {studies.length}
-          </h2>
-        </div>
-
-        {/* READY */}
-        <div className="bg-white rounded-2xl p-6 shadow-[0_2px_8px_rgba(15,23,42,0.04)] border border-gray-100">
-          <p className="text-gray-500 text-sm font-medium">
-            Ready Cases
-          </p>
-
-          <h2 className="text-3xl font-bold mt-4 text-green-600">
-            {
-              studies.filter(
-                (study) =>
-                  study.status === "READY"
-              ).length
-            }
-          </h2>
-        </div>
-
-        {/* PENDING */}
-        <div className="bg-white rounded-2xl p-6 shadow-[0_2px_8px_rgba(15,23,42,0.04)] border border-gray-100">
-          <p className="text-gray-500 text-sm font-medium">
-            Pending Cases
-          </p>
-
-          <h2 className="text-3xl font-bold mt-4 text-yellow-500">
-            {
-              studies.filter(
-                (study) =>
-                  study.status !== "READY"
-              ).length
-            }
-          </h2>
-        </div>
-      </div>
 
       {/* WORKLIST */}
       <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(15,23,42,0.04)] border border-gray-100 overflow-hidden">
         {/* SEARCH + FILTER */}
-        <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          {/* SEARCH */}
           <div className="relative w-full md:w-96">
             <Search
               size={18}
@@ -145,11 +61,12 @@ export default function ClientDashboard() {
             <input
               type="text"
               placeholder="Search patients..."
-              className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-11 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          <select className="border border-gray-200 rounded-2xl px-5 py-3 outline-none focus:ring-2 focus:ring-blue-500">
+          {/* FILTER */}
+          <select className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
             <option>
               All Status
             </option>
@@ -171,37 +88,33 @@ export default function ClientDashboard() {
         {/* TABLE */}
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[#f8fafc] text-left">
+            <thead className="bg-[#f9fbfd] text-left">
               <tr>
-                <th className="px-6 py-5 text-sm font-semibold text-gray-600">
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
                   Patient ID
                 </th>
 
-                <th className="px-6 py-5 text-sm font-semibold text-gray-600">
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
                   Patient Name
                 </th>
 
-                <th className="px-6 py-5 text-sm font-semibold text-gray-600">
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
                   Study Description
                 </th>
 
-                <th className="px-6 py-5 text-sm font-semibold text-gray-600">
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
                   Modality
                 </th>
 
-                <th className="px-6 py-5 text-sm font-semibold text-gray-600">
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
                   Status
                 </th>
 
-                <th className="px-6 py-5 text-sm font-semibold text-gray-600">
-                  Notes
-                </th>
-
-                <th className="px-6 py-5 text-sm font-semibold text-gray-600">
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
                   Date & Time
                 </th>
 
-                <th className="px-6 py-5 text-sm font-semibold text-gray-600">
+                <th className="px-6 py-4 text-sm font-semibold text-gray-600">
                   Actions
                 </th>
               </tr>
@@ -211,29 +124,29 @@ export default function ClientDashboard() {
               {studies.map((study) => (
                 <tr
                   key={study.id}
-                  className="border-t border-gray-100 hover:bg-gray-50 transition"
+                  className="border-t border-gray-100 hover:bg-[#fafcff] transition"
                 >
-                  <td className="px-6 py-5 text-sm font-medium text-gray-700">
+                  <td className="px-6 py-4 text-sm font-medium text-gray-700">
                     {study.id}
                   </td>
 
-                  <td className="px-6 py-5 text-sm font-semibold text-[#071739]">
+                  <td className="px-6 py-4 text-sm font-semibold text-[#071739]">
                     {study.patientName}
                   </td>
 
-                  <td className="px-6 py-5 text-sm text-gray-700">
+                  <td className="px-6 py-4 text-sm text-gray-700">
                     {
                       study.studyDescription
                     }
                   </td>
 
-                  <td className="px-6 py-5 text-sm text-gray-700">
+                  <td className="px-6 py-4 text-sm text-gray-700">
                     {study.modality}
                   </td>
 
-                  <td className="px-6 py-5">
+                  <td className="px-6 py-4">
                     <span
-                      className={`px-4 py-1.5 rounded-xl text-xs font-semibold ${
+                      className={`px-3 py-1 rounded-xl text-xs font-semibold ${
                         study.status === "READY"
                           ? "bg-green-100 text-green-700"
                           : study.status ===
@@ -246,33 +159,40 @@ export default function ClientDashboard() {
                     </span>
                   </td>
 
-                  <td className="px-6 py-5 text-sm text-gray-600 max-w-xs">
-                    {study.notes}
-                  </td>
-
-                  <td className="px-6 py-5 text-sm text-gray-600">
+                  <td className="px-6 py-4 text-sm text-gray-600">
                     {study.datetime}
                   </td>
 
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <button className="p-2 rounded-xl hover:bg-blue-50 transition">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      {/* VIEW */}
+                      <button className="p-2 rounded-lg hover:bg-blue-50 transition">
                         <Eye
-                          size={18}
+                          size={17}
                           className="text-blue-600"
                         />
                       </button>
 
-                      <button className="p-2 rounded-xl hover:bg-yellow-50 transition">
+                      {/* EDIT */}
+                      <button className="p-2 rounded-lg hover:bg-yellow-50 transition">
                         <Pencil
-                          size={18}
+                          size={17}
                           className="text-yellow-600"
                         />
                       </button>
 
-                      <button className="p-2 rounded-xl hover:bg-red-50 transition">
+                      {/* NOTES */}
+                      <button className="p-2 rounded-lg hover:bg-purple-50 transition">
+                        <MessageSquare
+                          size={17}
+                          className="text-purple-600"
+                        />
+                      </button>
+
+                      {/* DELETE */}
+                      <button className="p-2 rounded-lg hover:bg-red-50 transition">
                         <Trash2
-                          size={18}
+                          size={17}
                           className="text-red-600"
                         />
                       </button>
@@ -287,17 +207,18 @@ export default function ClientDashboard() {
 
       {/* MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-2xl rounded-[32px] p-10 shadow-2xl border border-gray-100">
-            {/* MODAL HEADER */}
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-4xl rounded-[28px] p-8 shadow-2xl border border-gray-100 overflow-y-auto max-h-[90vh]">
+            {/* HEADER */}
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-bold text-[#071739]">
+                <h2 className="text-2xl font-semibold text-[#071739]">
                   Add New Case
                 </h2>
 
-                <p className="text-gray-500 mt-2">
-                  Select upload workflow
+                <p className="text-sm text-gray-500 mt-1">
+                  Upload study details and
+                  documents
                 </p>
               </div>
 
@@ -311,33 +232,115 @@ export default function ClientDashboard() {
               </button>
             </div>
 
-            {/* OPTIONS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* MANUAL */}
-              <button className="border border-gray-200 rounded-2xl p-6 text-left hover:border-blue-500 hover:bg-blue-50 transition">
-                <h3 className="text-xl font-semibold text-[#071739]">
-                  Manual Entry
+            <div className="space-y-8">
+              {/* DOCUMENTS */}
+              <div>
+                <h3 className="text-lg font-semibold text-[#071739] mb-3">
+                  Upload Documents
                 </h3>
 
-                <p className="text-gray-500 mt-3 leading-relaxed">
-                  Enter patient details
-                  manually and upload
-                  imaging files.
-                </p>
-              </button>
+                <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center bg-[#fafcff]">
+                  <p className="text-sm text-gray-600">
+                    Upload consent forms,
+                    clinical history, CRF,
+                    PDFs, images, DOCX,
+                    etc.
+                  </p>
 
-              {/* LINK */}
-              <button className="border border-gray-200 rounded-2xl p-6 text-left hover:border-blue-500 hover:bg-blue-50 transition">
-                <h3 className="text-xl font-semibold text-[#071739]">
-                  Imaging Link Upload
+                  <input
+                    type="file"
+                    multiple
+                    className="mt-4"
+                  />
+                </div>
+              </div>
+
+              {/* IMAGING LINK */}
+              <div>
+                <h3 className="text-lg font-semibold text-[#071739] mb-3">
+                  PACS / Drive / Imaging
+                  Link
                 </h3>
 
-                <p className="text-gray-500 mt-3 leading-relaxed">
-                  Paste PACS or cloud
-                  imaging links without
-                  entering patient
-                  details.
-                </p>
+                <input
+                  type="text"
+                  placeholder="Paste imaging link (optional)"
+                  className="w-full border border-gray-200 rounded-2xl px-5 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* MANUAL ENTRY */}
+              <div>
+                <h3 className="text-lg font-semibold text-[#071739] mb-5">
+                  Manual Entry Details
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <input
+                    type="text"
+                    placeholder="Patient ID"
+                    className="border border-gray-200 rounded-2xl px-5 py-3 text-sm"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Patient Name"
+                    className="border border-gray-200 rounded-2xl px-5 py-3 text-sm"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Study Description"
+                    className="border border-gray-200 rounded-2xl px-5 py-3 text-sm"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Institution ID"
+                    className="border border-gray-200 rounded-2xl px-5 py-3 text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* MODALITY */}
+              <div>
+                <h3 className="text-lg font-semibold text-[#071739] mb-5">
+                  Modalities
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    "MRI",
+                    "PET",
+                    "DWI",
+                    "OTHER",
+                  ].map((modality) => (
+                    <div
+                      key={modality}
+                      className="border border-gray-200 rounded-2xl p-5 flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                        />
+
+                        <p className="text-sm font-medium text-[#071739]">
+                          {modality}
+                        </p>
+                      </div>
+
+                      <input
+                        type="file"
+                        className="text-xs"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* SUBMIT */}
+              <button className="w-full bg-[#071739] hover:bg-[#0b2559] text-white py-3 rounded-2xl font-medium transition">
+                Submit Case
               </button>
             </div>
           </div>
