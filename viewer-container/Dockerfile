@@ -3,6 +3,7 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
+    git \
     lazarus \
     fp-compiler \
     build-essential \
@@ -29,7 +30,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-COPY MRIcroGL-MedMarvel /app/MRIcroGL
+RUN git clone https://github.com/tanishqachopade/MRIcroGL-MedMarvel.git /app/MRIcroGL
 
 WORKDIR /app/MRIcroGL
 
