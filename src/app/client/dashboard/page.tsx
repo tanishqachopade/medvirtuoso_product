@@ -619,12 +619,20 @@ export default function ClientDashboard() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
 
-                      <button className="p-2 rounded-lg hover:bg-blue-50 transition">
-                        <Eye
-                          size={17}
-                          className="text-blue-600"
-                        />
-                      </button>
+                     <button
+  onClick={() =>
+    window.open(
+      "http://localhost:6080/vnc.html?autoconnect=true&resize=scale",
+      "_blank"
+    )
+  }
+  className="p-2 rounded-lg hover:bg-blue-50 transition"
+>
+  <Eye
+    size={17}
+    className="text-blue-600"
+  />
+</button>
 
                       <button
                         onClick={() =>

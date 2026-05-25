@@ -17,6 +17,14 @@ import {
 
 export default function OperatorDashboard() {
 
+  const VIEWER_URL =
+  process.env.NEXT_PUBLIC_VIEWER_URL ||
+  "http://localhost:6080/vnc.html?autoconnect=true&resize=scale";
+
+const handleOpenViewer = () => {
+  window.open(VIEWER_URL, "_blank");
+};
+
   const [studies, setStudies] =
     useState<any[]>([]);
 
@@ -632,7 +640,10 @@ export default function OperatorDashboard() {
 
                     <div className="flex items-center gap-2">
 
-                      <button className="p-2 rounded-xl hover:bg-blue-50 transition">
+                      <button 
+                      onClick={handleOpenViewer}
+                      
+                      className="p-2 rounded-xl hover:bg-blue-50 transition">
 
                         <Eye
                           size={17}
