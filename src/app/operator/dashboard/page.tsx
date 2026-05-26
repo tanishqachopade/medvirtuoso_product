@@ -299,9 +299,15 @@ const handleOpenViewer = () => {
       ""
     );
 
-    setModality(
-      study.modality || ""
-    );
+   setSelectedModalities(
+  study.modality
+    ? study.modality
+        .split(",")
+        .map((m: string) =>
+          m.trim()
+        )
+    : []
+);
 
     setShowEditModal(true);
   }
