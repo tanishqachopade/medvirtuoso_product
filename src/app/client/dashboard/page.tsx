@@ -328,6 +328,53 @@ const [
     }
   }
 
+
+  function handleModalityToggle(
+  modality: string
+) {
+  setSelectedModalities((prev) => {
+
+    // REMOVE modality
+    if (prev.includes(modality)) {
+
+      // Prevent removing MRI
+      if (
+        modality === "MRI" &&
+        (
+          prev.includes("PET") ||
+          prev.includes("DWI")
+        )
+      ) {
+        alert(
+          "Remove PET/DWI before removing MRI"
+        );
+
+        return prev;
+      }
+
+      return prev.filter(
+        (m) => m !== modality
+      );
+    }
+
+    // PET/DWI auto add MRI
+    if (
+      modality === "PET" ||
+      modality === "DWI"
+    ) {
+      return Array.from(
+        new Set([
+          ...prev,
+          "MRI",
+          modality,
+        ])
+      );
+    }
+
+    return [...prev, modality];
+  });
+}
+
   // =========================
   // SUBMIT FUNCTION
   // =========================
