@@ -18,12 +18,12 @@ import {
 export default function OperatorDashboard() {
 
   const VIEWER_URL =
-  process.env.NEXT_PUBLIC_VIEWER_URL ||
-  "http://localhost:6080/vnc.html?autoconnect=true&resize=scale";
+    process.env.NEXT_PUBLIC_VIEWER_URL ||
+    "http://localhost:6080/vnc.html?autoconnect=true&resize=scale";
 
-const handleOpenViewer = () => {
-  window.open(VIEWER_URL, "_blank");
-};
+  const handleOpenViewer = () => {
+    window.open(VIEWER_URL, "_blank");
+  };
 
   const [studies, setStudies] =
     useState<any[]>([]);
@@ -299,15 +299,9 @@ const handleOpenViewer = () => {
       ""
     );
 
-   setSelectedModalities(
-  study.modality
-    ? study.modality
-        .split(",")
-        .map((m: string) =>
-          m.trim()
-        )
-    : []
-);
+    setModality(
+      study.modality || ""
+    );
 
     setShowEditModal(true);
   }
@@ -495,7 +489,7 @@ const handleOpenViewer = () => {
               </th>
 
               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                 Date & Time
+                Date & Time
               </th>
 
               <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
@@ -524,21 +518,21 @@ const handleOpenViewer = () => {
                 >
 
                   {/* PATIENT */}
-<td className="px-6 py-4">
+                  <td className="px-6 py-4">
 
-  <div>
+                    <div>
 
-    <p className="font-medium text-[#071739]">
-      {study.patient?.patientName || "-"}
-    </p>
+                      <p className="font-medium text-[#071739]">
+                        {study.patient?.patientName || "-"}
+                      </p>
 
-    <p className="text-sm text-gray-500">
-      {study.patient?.patientId || "-"}
-    </p>
+                      <p className="text-sm text-gray-500">
+                        {study.patient?.patientId || "-"}
+                      </p>
 
-  </div>
+                    </div>
 
-</td>
+                  </td>
                   {/* DESCRIPTION */}
                   <td className="px-6 py-4 text-sm text-gray-700">
                     {study.studyDescription || "-"}
@@ -635,21 +629,21 @@ const handleOpenViewer = () => {
                   </td>
 
                   {/* DATE & TIME */}
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                  <td className="px-6 py-4 text-sm text-gray-600">
                     {new Date(
-                       study.createdAt
-                      ).toLocaleString()}
-                    </td>
+                      study.createdAt
+                    ).toLocaleString()}
+                  </td>
 
                   {/* ACTIONS */}
                   <td className="px-6 py-4">
 
                     <div className="flex items-center gap-2">
 
-                      <button 
-                      onClick={handleOpenViewer}
-                      
-                      className="p-2 rounded-xl hover:bg-blue-50 transition">
+                      <button
+                        onClick={handleOpenViewer}
+
+                        className="p-2 rounded-xl hover:bg-blue-50 transition">
 
                         <Eye
                           size={17}
@@ -748,7 +742,7 @@ const handleOpenViewer = () => {
                               await fetchStudies();
 
                             } catch (
-                              error
+                            error
                             ) {
 
                               console.error(
@@ -823,11 +817,11 @@ const handleOpenViewer = () => {
               {comments.length ===
                 0 && (
 
-                <p className="text-sm text-gray-500">
-                  No messages yet.
-                </p>
+                  <p className="text-sm text-gray-500">
+                    No messages yet.
+                  </p>
 
-              )}
+                )}
 
               {comments.map(
                 (comment) => {
@@ -840,39 +834,35 @@ const handleOpenViewer = () => {
 
                     <div
                       key={comment.id}
-                      className={`flex ${
-                        isOperator
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
+                      className={`flex ${isOperator
+                        ? "justify-end"
+                        : "justify-start"
+                        }`}
                     >
 
                       <div
-                        className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-sm ${
-                          isOperator
-                            ? "bg-[#071739] text-white"
-                            : "bg-white border border-gray-200 text-black"
-                        }`}
+                        className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-sm ${isOperator
+                          ? "bg-[#071739] text-white"
+                          : "bg-white border border-gray-200 text-black"
+                          }`}
                       >
 
                         <div className="flex items-center justify-between gap-4 mb-1">
 
                           <p
-                            className={`text-xs font-semibold ${
-                              isOperator
-                                ? "text-blue-200"
-                                : "text-gray-500"
-                            }`}
+                            className={`text-xs font-semibold ${isOperator
+                              ? "text-blue-200"
+                              : "text-gray-500"
+                              }`}
                           >
                             {comment.user?.name}
                           </p>
 
                           <p
-                            className={`text-[11px] ${
-                              isOperator
-                                ? "text-gray-300"
-                                : "text-gray-400"
-                            }`}
+                            className={`text-[11px] ${isOperator
+                              ? "text-gray-300"
+                              : "text-gray-400"
+                              }`}
                           >
                             {new Date(
                               comment.createdAt
