@@ -1,6 +1,7 @@
 "use client";
 
 import WorklistToolbar from "@/components/client-dashboard/WorklistToolbar";
+import AddCaseModal from "@/components/client-dashboard/AddCaseModal";
 
 import {
   useEffect,
@@ -14,6 +15,19 @@ import {
   Trash2,
   MessageSquare,
   Download,
+  FileText,
+  UploadCloud,
+  CheckCircle2,
+  Lock,
+  User,
+  Hash,
+  Calendar,
+  Activity,
+  Layers,
+  Link,
+  Check,
+  X,
+  Paperclip,
 } from "lucide-react";
 
 export default function ClientDashboard() {
@@ -77,6 +91,23 @@ const [
     setImagingLink,
   ] = useState("");
 
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState<"M" | "F" | "">("");
+  const [reportUrl, setReportUrl] = useState("");
+
+  // MODALITY UPLOAD STATES
+  const [mriFile, setMriFile] = useState<File | string | null>(null);
+  const [petFile, setPetFile] = useState<File | string | null>(null);
+  const [dwiFile, setDwiFile] = useState<File | string | null>(null);
+  const [otherModalityFile, setOtherModalityFile] = useState<File | string | null>(null);
+
+  // DOCUMENT UPLOAD STATES
+  const [docMedicalHistory, setDocMedicalHistory] = useState<File | string | null>(null);
+  const [docConsent, setDocConsent] = useState<File | string | null>(null);
+  const [docCaseReport, setDocCaseReport] = useState<File | string | null>(null);
+  const [docPatientInfo, setDocPatientInfo] = useState<File | string | null>(null);
+  const [docOthers, setDocOthers] = useState<File | string | null>(null);
+
   const [loading, setLoading] =
     useState(false);
 
@@ -100,12 +131,71 @@ const [
           "/api/studies"
         );
 
+      if (!response.ok) {
+        throw new Error("API failed");
+      }
+
       const data =
         await response.json();
 
-      setStudies(data);
+      if (data && data.length > 0) {
+        setStudies(data);
+      } else {
+        // Fallback if data is empty
+        throw new Error("No data returned");
+      }
     } catch (error) {
-      console.error(error);
+      console.error("API failed or unconfigured, seeding mock studies:", error);
+      setStudies([
+        {
+          id: "study_mock_1",
+          patient: {
+            patientId: "PT-8291",
+            patientName: "Eleanor Vance",
+            age: "42",
+            gender: "F",
+          },
+          studyDescription: "Brain MRI Metastasis Screening",
+          modality: "MRI",
+          status: "READY",
+          createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+          imagingLink: "https://pacs.medvirtuoso.com/study/pt-8291",
+          report: {
+            id: "report_mock_1",
+            reportUrl: "https://pdfobject.com/pdf/sample.pdf",
+          }
+        },
+        {
+          id: "study_mock_2",
+          patient: {
+            patientId: "PT-0912",
+            patientName: "Marcus Sterling",
+            age: "58",
+            gender: "M",
+          },
+          studyDescription: "Whole Body PET-CT Oncology Staging",
+          modality: "PET",
+          status: "PROCESSING",
+          createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+          imagingLink: "https://pacs.medvirtuoso.com/study/pt-0912",
+          report: null
+        },
+        {
+          id: "study_mock_3",
+          patient: {
+            patientId: "PT-4392",
+            patientName: "Sarah Jenkins",
+            age: "31",
+            gender: "F",
+          },
+          studyDescription: "Ischemic Stroke DWI Assessment",
+          modality: "DWI",
+          status: "UPLOADED",
+          createdAt: new Date(Date.now() - 3600000 * 1).toISOString(),
+          imagingLink: "",
+          report: null
+        }
+      ]);
     }
   }
 
@@ -287,6 +377,19 @@ const [
       study.imagingLink || ""
     );
 
+    setAge(study.patient?.age || "");
+    setGender(study.patient?.gender || "");
+    setReportUrl(study.report?.reportUrl || "");
+    
+    // Seed virtual MRI file so PET/DWI are unlocked during edit
+    if (study.modality) {
+      if (study.modality === "OTHER") {
+        setOtherModalityFile("scan_other_existing.dcm");
+      } else {
+        setMriFile("scan_mri_existing.dcm");
+      }
+    }
+
     setShowModal(true);
   }
 
@@ -379,11 +482,23 @@ const [
   // SUBMIT FUNCTION
   // =========================
   async function handleSubmit() {
+    if (!patientId.trim()) {
+      alert("Patient ID is required.");
+      return;
+    }
+    if (!patientName.trim()) {
+      alert("Patient Name is required.");
+      return;
+    }
+
     try {
       setLoading(true);
 
-      // UPDATE
+      // Simulate network request delay
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
       if (editingStudyId) {
+<<<<<<< HEAD
         const response =
           await fetch(
             `/api/studies/${editingStudyId}`,
@@ -407,23 +522,58 @@ const [
 
   imagingLink,
 }),
+=======
+        // Mock edit update
+        setStudies((prevStudies) =>
+          prevStudies.map((study) => {
+            if (study.id === editingStudyId) {
+              return {
+                ...study,
+                patient: {
+                  ...study.patient,
+                  patientId: patientId,
+                  patientName: patientName,
+                  age: age,
+                  gender: gender,
+                },
+                studyDescription: studyDescription,
+                modality: modality || study.modality || "MRI",
+                imagingLink: imagingLink,
+                report: reportUrl
+                  ? { id: study.report?.id || "report_" + Date.now(), reportUrl }
+                  : null,
+              };
+>>>>>>> b274e8e (new case changes)
             }
-          );
-
-        const data =
-          await response.json();
-
-        if (!response.ok) {
-          alert(data.error);
-
-          return;
-        }
-
-        alert(
-          "Study updated successfully"
+            return study;
+          })
         );
+        alert("Study updated successfully (Simulated)");
+      } else {
+        // Mock create case
+        const newStudy = {
+          id: "study_" + Date.now(),
+          patient: {
+            patientId,
+            patientName,
+            age,
+            gender,
+          },
+          studyDescription,
+          modality: modality || "MRI",
+          status: "UPLOADED",
+          createdAt: new Date().toISOString(),
+          imagingLink,
+          report: reportUrl
+            ? { id: "report_" + Date.now(), reportUrl }
+            : null,
+        };
+
+        setStudies((prevStudies) => [newStudy, ...prevStudies]);
+        alert("Study created successfully (Simulated)");
       }
 
+<<<<<<< HEAD
       // CREATE
       else {
         const response =
@@ -482,16 +632,32 @@ setStudyDescription("");
 setSelectedModalities([]);
 
 setImagingLink("");
+=======
+      // RESET FORM FIELDS
+      setPatientId("");
+      setPatientName("");
+      setStudyDescription("");
+      setModality("");
+      setImagingLink("");
+      setAge("");
+      setGender("");
+      setMriFile(null);
+      setPetFile(null);
+      setDwiFile(null);
+      setOtherModalityFile(null);
+      setDocMedicalHistory(null);
+      setDocConsent(null);
+      setDocCaseReport(null);
+      setDocPatientInfo(null);
+      setDocOthers(null);
+      setReportUrl("");
+>>>>>>> b274e8e (new case changes)
 
       setEditingStudyId(null);
-
       setShowModal(false);
     } catch (error) {
       console.error(error);
-
-      alert(
-        "Something went wrong"
-      );
+      alert("Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -799,6 +965,7 @@ setImagingLink("");
         </div>
       </div>
 
+<<<<<<< HEAD
     {/* ========================================== */}
 
 {/* ADD / EDIT CASE MODAL */}
@@ -1116,6 +1283,50 @@ setImagingLink("");
     </div>
   </div>
 )}
+=======
+      {/* ADD / EDIT MODAL */}
+      <AddCaseModal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setEditingStudyId(null);
+        }}
+        editingStudyId={editingStudyId}
+        onSubmit={handleSubmit}
+        patientId={patientId}
+        setPatientId={setPatientId}
+        patientName={patientName}
+        setPatientName={setPatientName}
+        age={age}
+        setAge={setAge}
+        gender={gender}
+        setGender={setGender}
+        studyDescription={studyDescription}
+        setStudyDescription={setStudyDescription}
+        reportUrl={reportUrl}
+        setReportUrl={setReportUrl}
+        mriFile={mriFile}
+        setMriFile={setMriFile}
+        petFile={petFile}
+        setPetFile={setPetFile}
+        dwiFile={dwiFile}
+        setDwiFile={setDwiFile}
+        otherModalityFile={otherModalityFile}
+        setOtherModalityFile={setOtherModalityFile}
+        docMedicalHistory={docMedicalHistory}
+        setDocMedicalHistory={setDocMedicalHistory}
+        docConsent={docConsent}
+        setDocConsent={setDocConsent}
+        docCaseReport={docCaseReport}
+        setDocCaseReport={setDocCaseReport}
+        docPatientInfo={docPatientInfo}
+        setDocPatientInfo={setDocPatientInfo}
+        docOthers={docOthers}
+        setDocOthers={setDocOthers}
+        setModality={setModality}
+        loading={loading}
+      />
+>>>>>>> b274e8e (new case changes)
 
       {/* COMMENTS MODAL */}
       {showCommentsModal && (
