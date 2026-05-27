@@ -1,6 +1,7 @@
 "use client";
 
 import WorklistToolbar from "@/components/client-dashboard/WorklistToolbar";
+import AddCaseModal from "@/components/client-dashboard/AddCaseModal";
 
 import {
   useEffect,
@@ -799,323 +800,38 @@ setImagingLink("");
         </div>
       </div>
 
-    {/* ========================================== */}
-
-{/* ADD / EDIT CASE MODAL */}
-{showModal && (
-  <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-    <div className="bg-white w-full max-w-6xl rounded-2xl shadow-2xl border border-gray-200 max-h-[88vh] overflow-y-auto">
-
-      <div className="p-5">
-
-        {/* CLOSE */}
-        <div className="flex justify-end mb-2">
-          <button
-            onClick={() =>
-              setShowModal(false)
-            }
-            className="text-gray-400 hover:text-black text-2xl"
-          >
-            ×
-          </button>
-        </div>
-
-        {/* MAIN GRID */}
-        <div className="grid grid-cols-2 gap-5">
-
-          {/* LEFT SIDE */}
-          <div className="space-y-5">
-
-            {/* PATIENT DETAILS */}
-            <div className="border border-gray-200 rounded-xl p-4">
-              <h3 className="text-xl font-semibold text-[#071739] mb-4">
-                Patient Details
-              </h3>
-
-              <div className="grid grid-cols-2 gap-3">
-
-                <input
-                  type="text"
-                  placeholder="Patient Name"
-                  value={patientName}
-                  onChange={(e) =>
-                    setPatientName(
-                      e.target.value
-                    )
-                  }
-                  className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#071739]"
-                />
-
-                <input
-                  type="text"
-                  placeholder="Patient ID"
-                  value={patientId}
-                  onChange={(e) =>
-                    setPatientId(
-                      e.target.value
-                    )
-                  }
-                  className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#071739]"
-                />
-
-                <input
-                  type="number"
-                  placeholder="Age"
-                  value={age}
-                  onChange={(e) =>
-                    setAge(
-                      e.target.value
-                    )
-                  }
-                  className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#071739]"
-                />
-
-                <select
-                  value={gender}
-                  onChange={(e) =>
-                    setGender(
-                      e.target.value
-                    )
-                  }
-                  className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white outline-none focus:border-[#071739]"
-                >
-                  <option value="">
-                    Gender
-                  </option>
-
-                  <option value="Male">
-                    Male
-                  </option>
-
-                  <option value="Female">
-                    Female
-                  </option>
-
-                  <option value="Other">
-                    Other
-                  </option>
-                </select>
-              </div>
-
-              <textarea
-                placeholder="Study Description"
-                rows={2}
-                value={studyDescription}
-                onChange={(e) =>
-                  setStudyDescription(
-                    e.target.value
-                  )
-                }
-                className="mt-3 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none resize-none focus:border-[#071739]"
-              />
-            </div>
-
-            {/* MODALITIES */}
-            <div className="border border-gray-200 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xl font-semibold text-[#071739]">
-                  Modalities
-                </h3>
-
-                <p className="text-xs text-gray-500">
-                  PET/DWI require MRI
-                </p>
-              </div>
-
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  "MRI",
-                  "PET",
-                  "DWI",
-                  "OTHER",
-                ].map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() =>
-                      handleModalityToggle(
-                        item
-                      )
-                    }
-                    className={`h-10 rounded-lg border text-sm font-medium transition-all ${
-                      selectedModalities.includes(
-                        item
-                      )
-                        ? "bg-[#071739] text-white border-[#071739]"
-                        : "bg-white text-[#071739] border-gray-200 hover:border-[#071739]"
-                    }`}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* IMAGING LINK */}
-            <div className="border border-gray-200 rounded-xl p-4">
-              <h3 className="text-xl font-semibold text-[#071739] mb-3">
-                PACS / Drive / Imaging Link
-              </h3>
-
-              <input
-                type="text"
-                placeholder="Paste imaging link"
-                value={imagingLink}
-                onChange={(e) =>
-                  setImagingLink(
-                    e.target.value
-                  )
-                }
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#071739]"
-              />
-            </div>
-          </div>
-
-          {/* RIGHT SIDE */}
-          <div className="border border-gray-200 rounded-xl p-4">
-
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-xl font-semibold text-[#071739]">
-                  Upload Documents
-                </h3>
-
-                <p className="text-sm text-gray-500">
-                  Multiple files supported
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-
-              {/* CLINICAL HISTORY */}
-              <div className="border border-gray-200 rounded-xl p-3">
-                <div className="flex justify-between items-center mb-2">
-                  <p className="text-sm font-medium text-[#071739]">
-                    Clinical History
-                  </p>
-
-                  <span className="text-xs text-gray-400">
-                    Multiple
-                  </span>
-                </div>
-
-                <input
-                  type="file"
-                  multiple
-                  className="block w-full text-xs"
-                />
-              </div>
-
-              {/* CONSENT FORM */}
-              <div className="border border-gray-200 rounded-xl p-3">
-                <div className="flex justify-between items-center mb-2">
-                  <p className="text-sm font-medium text-[#071739]">
-                    Consent Form
-                  </p>
-
-                  <span className="text-xs text-gray-400">
-                    Multiple
-                  </span>
-                </div>
-
-                <input
-                  type="file"
-                  multiple
-                  className="block w-full text-xs"
-                />
-              </div>
-
-              {/* PATIENT INFO SHEET */}
-              <div className="border border-gray-200 rounded-xl p-3">
-                <div className="flex justify-between items-center mb-2">
-                  <p className="text-sm font-medium text-[#071739]">
-                    Patient Information Sheet
-                  </p>
-
-                  <span className="text-xs text-gray-400">
-                    Multiple
-                  </span>
-                </div>
-
-                <input
-                  type="file"
-                  multiple
-                  className="block w-full text-xs"
-                />
-              </div>
-
-              {/* CASE REPORT FORM */}
-              <div className="border border-gray-200 rounded-xl p-3">
-                <div className="flex justify-between items-center mb-2">
-                  <p className="text-sm font-medium text-[#071739]">
-                    Case Report Form
-                  </p>
-
-                  <span className="text-xs text-gray-400">
-                    Multiple
-                  </span>
-                </div>
-
-                <input
-                  type="file"
-                  multiple
-                  className="block w-full text-xs"
-                />
-              </div>
-
-              {/* OTHER */}
-              <div className="border border-gray-200 rounded-xl p-3">
-                <div className="flex justify-between items-center mb-2">
-                  <p className="text-sm font-medium text-[#071739]">
-                    Other
-                  </p>
-
-                  <span className="text-xs text-gray-400">
-                    Multiple
-                  </span>
-                </div>
-
-                <input
-                  type="file"
-                  multiple
-                  className="block w-full text-xs"
-                />
-              </div>
-            </div>
-
-            {/* BUTTONS */}
-            <div className="flex justify-end gap-3 mt-5">
-
-              <button
-                type="button"
-                onClick={() =>
-                  setShowModal(false)
-                }
-                className="px-5 py-2 rounded-xl border border-gray-300 text-sm font-medium hover:bg-gray-100 transition-all"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading}
-                className="px-5 py-2 rounded-xl bg-[#071739] text-white text-sm font-medium hover:opacity-90 transition-all"
-              >
-                {loading
-                  ? "Saving..."
-                  : editingStudyId
-                  ? "Update Case"
-                  : "Create Case"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+    {/* ADD / EDIT CASE MODAL */}
+      <AddCaseModal
+        isOpen={showModal}
+        isEditing={!!editingStudyId}
+        loading={loading}
+        patientName={patientName}
+        patientId={patientId}
+        age={age}
+        gender={gender}
+        studyDescription={studyDescription}
+        selectedModalities={selectedModalities}
+        imagingLink={imagingLink}
+        setPatientName={setPatientName}
+        setPatientId={setPatientId}
+        setAge={setAge}
+        setGender={setGender}
+        setStudyDescription={setStudyDescription}
+        setSelectedModalities={setSelectedModalities}
+        setImagingLink={setImagingLink}
+        onClose={() => {
+          setShowModal(false);
+          setEditingStudyId(null);
+          setPatientId("");
+          setPatientName("");
+          setAge("");
+          setGender("");
+          setStudyDescription("");
+          setSelectedModalities(() => []);
+          setImagingLink("");
+        }}
+        onSubmit={handleSubmit}
+      />
 
       {/* COMMENTS MODAL */}
       {showCommentsModal && (
