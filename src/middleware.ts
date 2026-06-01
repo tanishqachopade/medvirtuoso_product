@@ -1,48 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-
-console.log("MIDDLEWARE RUNNING");
-
 import { verifyToken } from "@/lib/auth";
 
-export async function middleware(
-  req: NextRequest
-) {
-  const token =
-    req.cookies.get("token")?.value;
+export async function middleware(req: NextRequest) {
+  const token = req.cookies.get("token")?.value;
+  const { pathname } = req.nextUrl;
 
-  const isAuthPage =
-    req.nextUrl.pathname === "/login";
+  const isLoginPage = pathname === "/login";
+  const isProtectedRoute =
+    pathname.startsWith("/client") || pathname.startsWith("/operator");
 
-  const isDashboardRoute =
-    req.nextUrl.pathname.startsWith(
-      "/dashboard"
-    );
-
-  if (isDashboardRoute) {
+  // Guard protected routes — must have a valid token
+  if (isProtectedRoute) {
     if (!token) {
-      return NextResponse.redirect(
-        new URL("/login", req.url)
-      );
+      return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    const verified =
-      await verifyToken(token);
-
+    const verified = await verifyToken(token);
     if (!verified) {
-      return NextResponse.redirect(
-        new URL("/login", req.url)
-      );
+      return NextResponse.redirect(new URL("/login", req.url));
     }
-  }
 
-  if (isAuthPage && token) {
-    const verified =
-      await verifyToken(token);
-
-    if (verified) {
-      return NextResponse.redirect(
-        new URL("/dashboard", req.url)
-      );
+    const role = verified.role as string;
+    if (pathname.startsWith("/client") && role !== "CLIENT") {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+    if (pathname.startsWith("/operator") && role !== "OPERATOR") {
+      return NextResponse.redirect(new URL("/login", req.url));
     }
   }
 
@@ -51,8 +34,8 @@ export async function middleware(
 
 export const config = {
   matcher: [
-    "/dashboard",
-    "/dashboard/:path*",
+    "/client/:path*",
+    "/operator/:path*",
     "/login",
   ],
 };

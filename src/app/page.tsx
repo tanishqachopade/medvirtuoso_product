@@ -1,64 +1,117 @@
 import Image from "next/image";
+import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "MedMarvel Software Solutions",
+  description:
+    "MedMarvel Software Solutions – Advanced medical imaging and diagnostics platform for healthcare professionals.",
+};
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      style={{
+        background: "linear-gradient(160deg, #f0f4ff 0%, #ffffff 50%, #eef2fb 100%)",
+      }}
+    >
+      {/* Very subtle top-left accent */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-0 left-0 w-full h-1"
+        style={{ background: "linear-gradient(90deg, #2563eb, #3b82f6, #6366f1)" }}
+      />
+
+      {/* Soft radial tint — bottom right */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-0 right-0 h-[420px] w-[420px] rounded-full"
+        style={{
+          background: "radial-gradient(circle, rgba(59,130,246,0.07) 0%, transparent 70%)",
+        }}
+      />
+
+      {/* Main content */}
+      <main className="relative z-10 flex flex-col items-center gap-7 px-8 py-20 text-center">
+
+        {/* Logo */}
+        <div
+          className="flex items-center justify-center rounded-2xl"
+          style={{
+            width: 104,
+            height: 104,
+            background: "#ffffff",
+            border: "1px solid rgba(37,99,235,0.15)",
+            boxShadow:
+              "0 4px 24px rgba(37,99,235,0.10), 0 1px 4px rgba(0,0,0,0.06)",
+          }}
+        >
+          <Image
+            src="/logo/logo.png"
+            alt="MedMarvel Software Solutions logo"
+            width={72}
+            height={72}
+            style={{ objectFit: "contain", borderRadius: "10px" }}
+            priority
+          />
+        </div>
+
+        {/* Company name */}
+        <div className="flex flex-col items-center gap-2">
+          <h1
+            className="font-bold tracking-tight leading-tight"
+            style={{
+              fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)",
+              color: "#0f172a",
+            }}
+          >
+            MedMarvel Software Solutions
           </h1>
-          <p className="max-w-md text-base leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          {/* Thin blue underline accent */}
+          <div
+            className="rounded-full"
+            style={{
+              width: 48,
+              height: 3,
+              background: "linear-gradient(90deg, #2563eb, #6366f1)",
+              marginTop: 2,
+            }}
+          />
+
+          <p
+            className="text-base font-medium mt-1"
+            style={{ color: "#64748b", letterSpacing: "0.02em" }}
+          >
+            Advanced Medical Imaging Platform
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-xl border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        {/* Login CTA */}
+        <Link
+          id="btn-login"
+          href="/login"
+          className="inline-flex items-center justify-center rounded-xl text-base font-semibold text-white transition-all duration-200 hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          style={{
+            padding: "0.75rem 3rem",
+            minWidth: 168,
+            background: "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)",
+            boxShadow:
+              "0 4px 16px rgba(37,99,235,0.30), 0 1px 0 rgba(255,255,255,0.12) inset",
+            marginTop: 8,
+          }}
+        >
+          Login
+        </Link>
+
+        {/* Footer */}
+        <p
+          className="text-xs mt-6"
+          style={{ color: "#94a3b8" }}
+        >
+          © {new Date().getFullYear()} MedMarvel Software Solutions. All rights reserved.
+        </p>
       </main>
     </div>
   );

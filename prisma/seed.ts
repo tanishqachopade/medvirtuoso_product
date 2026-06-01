@@ -41,7 +41,7 @@ async function main() {
       name: "Client User",
 
       email:
-        "client@medvirtuoso.com",
+        "client@medmarvel.com",
 
       password:
         hashedPassword,
@@ -56,10 +56,10 @@ async function main() {
   // CREATE OPERATOR USER
   await prisma.user.create({
     data: {
-      name: "Operator User",
+      name: "Admin User",
 
       email:
-        "operator@medvirtuoso.com",
+        "admin@medmarvel.com",
 
       password:
         hashedPassword,
