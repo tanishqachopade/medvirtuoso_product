@@ -1,797 +1,1221 @@
 "use client";
 
-import WorklistToolbar from "@/components/client-dashboard/WorklistToolbar";
-import AddCaseModal from "@/components/client-dashboard/AddCaseModal";
-import { useRouter } from "next/navigation";
-
+import { useRef, useState } from "react";
 import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  Search,
-  Eye,
-  Pencil,
-  Trash2,
-  MessageSquare,
-  Download,
-  FileText,
-  UploadCloud,
-  CheckCircle2,
-  Lock,
+  X,
   User,
   Hash,
-  Calendar,
-  Activity,
-  Layers,
-  Link,
-  Check,
-  X,
+  CalendarDays,
+  FileText,
+  Link2,
+  Upload,
+  CheckCircle2,
+  Lock,
+  FileImage,
+  FilePlus2,
+  ClipboardList,
+  BookOpen,
   Paperclip,
+  ChevronRight,
+  AlertCircle,
 } from "lucide-react";
 
-export default function ClientDashboard() {
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-  const router = useRouter();
-
-  const [showModal, setShowModal] = useState(false);
-
-  const [editingStudyId, setEditingStudyId] = useState<string | null>(null);
-
-  // COMMENTS STATES
-  const [showCommentsModal, setShowCommentsModal] = useState(false);
-  const [selectedStudyId, setSelectedStudyId] = useState<string | null>(null);
-  const [comments, setComments] = useState<any[]>([]);
-  const [message, setMessage] = useState("");
-  const [commentsLoading, setCommentsLoading] = useState(false);
-
-  // FORM STATES
-  const [patientId, setPatientId] = useState("");
-  const [patientName, setPatientName] = useState("");
-  const [studyDescription, setStudyDescription] = useState("");
-  const [selectedModalities, setSelectedModalities] = useState<string[]>([]);
-  const [modality, setModality] = useState("");
-  const [imagingLink, setImagingLink] = useState("");
-  const [age, setAge] = useState("");
-  const [gender, setGender] = useState<"M" | "F" | "">("");
-  const [reportUrl, setReportUrl] = useState("");
-
-  // MODALITY UPLOAD STATES
-  const [mriFile, setMriFile] = useState<File | string | null>(null);
-  const [petFile, setPetFile] = useState<File | string | null>(null);
-  const [dwiFile, setDwiFile] = useState<File | string | null>(null);
-  const [otherModalityFile, setOtherModalityFile] = useState<File | string | null>(null);
-
-  // DOCUMENT UPLOAD STATES
-  const [docMedicalHistory, setDocMedicalHistory] = useState<File | string | null>(null);
-  const [docConsent, setDocConsent] = useState<File | string | null>(null);
-  const [docCaseReport, setDocCaseReport] = useState<File | string | null>(null);
-  const [docPatientInfo, setDocPatientInfo] = useState<File | string | null>(null);
-  const [docOthers, setDocOthers] = useState<File | string | null>(null);
-
-  const [loading, setLoading] = useState(false);
-
-  // DATABASE STUDIES
-  const [studies, setStudies] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
-
-  // =========================
-  // FETCH STUDIES
-  // =========================
-  async function fetchStudies() {
-    try {
-      const response = await fetch("/api/studies");
-
-      if (!response.ok) {
-        throw new Error("API failed");
-      }
-
-      const data = await response.json();
-
-
-if (Array.isArray(data)) {
-  setStudies(data);
-} else {
-  throw new Error("Invalid API response");
+interface UploadedFile {
+  name: string;
+  size: number;
 }
-    } catch (error) {
-      console.error("API failed or unconfigured, seeding mock studies:", error);
-      setStudies([
-        {
-          id: "study_mock_1",
-          patient: {
-            patientId: "PT-8291",
-            patientName: "Eleanor Vance",
-            age: "42",
-            gender: "F",
-          },
-          studyDescription: "Brain MRI Metastasis Screening",
-          modality: "MRI",
-          status: "READY",
-          createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-          imagingLink: "https://pacs.medvirtuoso.com/study/pt-8291",
-          report: {
-            id: "report_mock_1",
-            reportUrl: "https://pdfobject.com/pdf/sample.pdf",
-          },
-        },
-        {
-          id: "study_mock_2",
-          patient: {
-            patientId: "PT-0912",
-            patientName: "Marcus Sterling",
-            age: "58",
-            gender: "M",
-          },
-          studyDescription: "Whole Body PET-CT Oncology Staging",
-          modality: "PET",
-          status: "PROCESSING",
-          createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
-          imagingLink: "https://pacs.medvirtuoso.com/study/pt-0912",
-          report: null,
-        },
-        {
-          id: "study_mock_3",
-          patient: {
-            patientId: "PT-4392",
-            patientName: "Sarah Jenkins",
-            age: "31",
-            gender: "F",
-          },
-          studyDescription: "Ischemic Stroke DWI Assessment",
-          modality: "DWI",
-          status: "UPLOADED",
-          createdAt: new Date(Date.now() - 3600000 * 1).toISOString(),
-          imagingLink: "",
-          report: null,
-        },
-      ]);
-    }
-  }
 
-  useEffect(() => {
-    fetchStudies();
-  }, []);
-
-  const filteredStudies = studies.filter((study) => {
-    const matchesSearch =
-      study.patient?.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      study.patient?.patientId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      study.studyDescription?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      study.modality?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "ALL" ? true : study.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  // =========================
-  // FETCH COMMENTS
-  // =========================
-  async function fetchComments(studyId: string) {
-    try {
-      const response = await fetch(`/api/studies/${studyId}/comments`);
-      const data = await response.json();
-      setComments(data);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  // =========================
-  // OPEN COMMENTS
-  // =========================
-  async function openComments(studyId: string) {
-    setSelectedStudyId(studyId);
-    setShowCommentsModal(true);
-    await fetchComments(studyId);
-  }
-
-  // =========================
-  // SEND MESSAGE
-  // =========================
-  async function handleSendMessage() {
-    try {
-      if (!message || !selectedStudyId) {
-        return;
-      }
-
-      setCommentsLoading(true);
-
-      const response = await fetch(`/api/studies/${selectedStudyId}/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message,
-          role: "CLIENT",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.error);
-        return;
-      }
-
-      setMessage("");
-      await fetchComments(selectedStudyId);
-    } catch (error) {
-      console.error(error);
-      alert("Failed to send message");
-    } finally {
-      setCommentsLoading(false);
-    }
-  }
-
-  // =========================
-  // EDIT FUNCTION
-  // =========================
-  function handleEdit(study: any) {
-    setEditingStudyId(study.id);
-    setPatientId(study.patient?.patientId || "");
-    setPatientName(study.patient?.patientName || "");
-    setStudyDescription(study.studyDescription || "");
-    setSelectedModalities(
-      study.modality
-        ? study.modality.split(",").map((m: string) => m.trim())
-        : []
-    );
-    setImagingLink(study.imagingLink || "");
-    setAge(study.patient?.age || "");
-    setGender(study.patient?.gender || "");
-    setReportUrl(study.report?.reportUrl || "");
-
-    if (study.modality) {
-      if (study.modality === "OTHER") {
-        setOtherModalityFile("scan_other_existing.dcm");
-      } else {
-        setMriFile("scan_mri_existing.dcm");
-      }
-    }
-
-    setShowModal(true);
-  }
-
-  // =========================
-  // DELETE FUNCTION
-  // =========================
-
-  async function handleDelete(
-  id: string
-) {
-  try {
-
-    const confirmed =
-      window.confirm(
-        "Delete this study?"
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    const response =
-      await fetch(
-        `/api/studies/${id}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-    const data =
-      await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.error
-      );
-    }
-
-    await fetchStudies();
-
-    alert(
-      "Study deleted successfully"
-    );
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      "Failed to delete study"
-    );
-  }
+interface DocumentSlot {
+  key: string;
+  label: string;
+  icon: React.ReactNode;
+  files: UploadedFile[];
 }
-  
 
-  // =========================
-  // SUBMIT FUNCTION
-  // =========================
-  async function handleSubmit() {
-    if (!patientId.trim()) {
-      alert("Patient ID is required.");
-      return;
-    }
+interface AddCaseModalProps {
+  isOpen: boolean;
+  isEditing: boolean;
+  loading: boolean;
 
-    if (!patientName.trim()) {
-      alert("Patient Name is required.");
-      return;
-    }
+  // Patient Details
+  patientName: string;
+  patientId: string;
+  age: string;
+  gender: string;
+  studyDescription: string;
 
-    try {
-      setLoading(true);
+  // Modalities
+  selectedModalities: string[];
 
-      await new Promise((resolve) => setTimeout(resolve, 800));
+  // Link
+  imagingLink: string;
 
-         if (editingStudyId) {
+  // Setters
+  setPatientName: (v: string) => void;
+  setPatientId: (v: string) => void;
+  setAge: (v: string) => void;
+  setGender: (v: string) => void;
+  setStudyDescription: (v: string) => void;
+  setSelectedModalities: React.Dispatch<React.SetStateAction<string[]>>;
+  setImagingLink: (v: string) => void;
 
-  const response = await fetch(
-    `/api/studies/${editingStudyId}`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        patientId,
-        patientName,
-        studyDescription,
-        modality: selectedModalities.join(", "),
-        imagingLink,
-      }),
-    }
+  // Actions
+  onClose: () => void;
+  onSubmit: () => void;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function fmtSize(bytes: number) {
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+/** Small styled input */
+function FieldInput({
+  icon,
+  placeholder,
+  value,
+  onChange,
+  type = "text",
+  id,
+}: {
+  icon: React.ReactNode;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  id: string;
+}) {
+  return (
+    <div className="acm-field">
+      <span className="acm-field-icon">{icon}</span>
+      <input
+        id={id}
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="acm-input"
+        autoComplete="off"
+      />
+    </div>
   );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error);
-  }
-
-  await fetchStudies();
-
-  alert("Study updated successfully");
 }
-         
-else {
 
-  const response = await fetch("/api/studies", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      patientId,
-      patientName,
-      studyDescription,
-      modality: selectedModalities.join(", "),
-      imagingLink,
-    }),
-  });
+/** Gender toggle M / F / Other */
+function GenderSelector({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const opts = [
+    { label: "M", val: "Male" },
+    { label: "F", val: "Female" },
+    { label: "X", val: "Other" },
+  ];
+  return (
+    <div className="acm-gender-row" role="group" aria-label="Gender">
+      {opts.map((o) => (
+        <button
+          key={o.val}
+          type="button"
+          aria-pressed={value === o.val}
+          onClick={() => onChange(o.val)}
+          className={`acm-gender-btn${value === o.val ? " acm-gender-btn--active" : ""}`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
-  const data = await response.json();
+/** Modality upload card */
+function ModalityCard({
+  modality,
+  selected,
+  disabled,
+  helperText,
+  attachedFile,
+  accept,
+  onFileSelect,
+}: {
+  modality: string;
+  selected: boolean;
+  disabled: boolean;
+  helperText?: string;
+  attachedFile: UploadedFile | null;
+  accept?: string;
+  onFileSelect: (file: UploadedFile | null) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  if (!response.ok) {
-    throw new Error(data.error);
-  }
-
-  const studyId = data.study.id;
-
-  const filesToUpload = [
-
-    mriFile,
-    petFile,
-    dwiFile,
-    otherModalityFile,
-
-    docMedicalHistory,
-    docConsent,
-    docCaseReport,
-    docPatientInfo,
-    docOthers,
-
-  ].filter(Boolean);
-
-  for (const file of filesToUpload) {
-
-    const formData =
-      new FormData();
-
-    formData.append(
-      "file",
-      file as File
-    );
-
-    const uploadResponse =
-      await fetch(
-        `/api/studies/${studyId}/files`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-    if (!uploadResponse.ok) {
-      throw new Error(
-        "Failed to upload file"
-      );
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      onFileSelect({
+        name: file.name,
+        size: file.size,
+      });
     }
+    e.target.value = "";
   }
 
-  await fetchStudies();
-
-  alert("Study created successfully");
-}
-   
-      // RESET FORM
-      setPatientId("");
-      setPatientName("");
-      setAge("");
-      setGender("");
-      setStudyDescription("");
-      setSelectedModalities([]);
-      setImagingLink("");
-      setReportUrl("");
-      setMriFile(null);
-      setPetFile(null);
-      setDwiFile(null);
-      setOtherModalityFile(null);
-      setDocMedicalHistory(null);
-      setDocConsent(null);
-      setDocCaseReport(null);
-      setDocPatientInfo(null);
-      setDocOthers(null);
-      setEditingStudyId(null);
-      setShowModal(false);
-    } catch (error) {
-      console.error(error);
-      alert("Something went wrong");
-    } finally {
-      setLoading(false);
+  function handleClick() {
+    if (!disabled) {
+      inputRef.current?.click();
     }
   }
 
   return (
-    <div className="space-y-6">
-      <WorklistToolbar onAddCase={() => setShowModal(true)} />
-
-      {/* WORKLIST */}
-      <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(15,23,42,0.04)] border border-gray-100 overflow-hidden">
-
-        {/* HEADER */}
-        <div className="p-5 border-b border-gray-100">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
-
-            {/* LEFT */}
-            <div className="space-y-4 flex-1">
-              <h2 className="text-xl font-semibold text-[#071739]">Worklist</h2>
-
-              {/* SEARCH */}
-              <div className="relative w-full max-w-md">
-                <Search
-                  size={18}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                />
-                <input
-                  type="text"
-                  placeholder="Search patients..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-11 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* RIGHT */}
-            <div className="flex items-center gap-3 self-start">
-              <div className="bg-[#f7f9fc] px-5 py-3 rounded-xl border border-gray-100 min-w-[95px]">
-                <p className="text-xs text-gray-500">Total</p>
-                <p className="text-base font-semibold text-[#071739]">{studies.length}</p>
-              </div>
-
-              <div className="bg-[#f7f9fc] px-5 py-3 rounded-xl border border-gray-100 min-w-[95px]">
-                <p className="text-xs text-gray-500">Ready</p>
-                <p className="text-base font-semibold text-green-600">
-                  {studies.filter((s) => s.status === "READY").length}
-                </p>
-              </div>
-
-              <div className="bg-[#f7f9fc] px-5 py-3 rounded-xl border border-gray-100 min-w-[95px]">
-                <p className="text-xs text-gray-500">Pending</p>
-                <p className="text-base font-semibold text-yellow-600">
-                  {studies.filter((s) => s.status !== "READY").length}
-                </p>
-              </div>
-
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="border border-gray-200 hover:bg-gray-50 px-4 py-3 rounded-xl text-sm transition bg-white"
-              >
-                <option value="ALL">All</option>
-                <option value="UPLOADED">Uploaded</option>
-                <option value="PROCESSING">Processing</option>
-                <option value="READY">Ready</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* TABLE */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-[#f9fbfd] text-left">
-              <tr>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">Patient ID</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">Patient Name</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">Study Description</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">Modality</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">Status</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">Date & Time</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-600">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredStudies.map((study) => (
-                <tr
-                  key={study.id}
-                  className="border-t border-gray-100 hover:bg-[#fafcff] transition"
-                >
-                  <td className="px-6 py-4 text-sm font-medium text-gray-700">
-                    {study.patient?.patientId || "-"}
-                  </td>
-
-                  <td className="px-6 py-4 text-sm font-semibold text-[#071739]">
-                    {study.patient?.patientName || "-"}
-                  </td>
-
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    {study.studyDescription || "-"}
-                  </td>
-
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    {study.modality || "-"}
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-3 py-1 rounded-xl text-xs font-semibold ${
-                        study.status === "READY"
-                          ? "bg-green-100 text-green-700"
-                          : study.status === "PROCESSING"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-blue-100 text-blue-700"
-                      }`}
-                    >
-                      {study.status}
-                    </span>
-                  </td>
-
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {new Date(study.createdAt).toLocaleString()}
-                  </td>
-
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <button
-  onClick={() => router.push(`/viewer/${study.id}`)}
-  className="p-2 rounded-lg hover:bg-blue-50 transition"
->
-  <Eye size={17} className="text-blue-600" />
-</button>
-
-                      <button
-                        onClick={() => handleEdit(study)}
-                        className="p-2 rounded-lg hover:bg-yellow-50 transition"
-                      >
-                        <Pencil size={17} className="text-yellow-600" />
-                      </button>
-
-                      <button
-                        onClick={() => openComments(study.id)}
-                        className="p-2 rounded-lg hover:bg-purple-50 transition"
-                      >
-                        <MessageSquare size={17} className="text-purple-600" />
-                      </button>
-
-                      <button
-                        disabled={!study.report}
-                        onClick={() => {
-                          if (study.report?.reportUrl) {
-                            window.open(study.report.reportUrl, "_blank");
-                          }
-                        }}
-                        className={`p-2 rounded-lg transition ${
-                          study.report
-                            ? "hover:bg-green-50"
-                            : "opacity-40 cursor-not-allowed"
-                        }`}
-                      >
-                        <Download size={17} className="text-green-600" />
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(study.id)}
-                        className="p-2 rounded-lg hover:bg-red-50 transition"
-                      >
-                        <Trash2 size={17} className="text-red-600" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-<<<<<<< HEAD
-    {/* ADD / EDIT CASE MODAL */}
-      <AddCaseModal
-        isOpen={showModal}
-        isEditing={!!editingStudyId}
-        loading={loading}
-        patientName={patientName}
-        patientId={patientId}
-        age={age}
-        gender={gender}
-        studyDescription={studyDescription}
-        selectedModalities={selectedModalities}
-        imagingLink={imagingLink}
-        setPatientName={setPatientName}
-        setPatientId={setPatientId}
-        setAge={setAge}
-        setGender={setGender}
-        setStudyDescription={setStudyDescription}
-        setSelectedModalities={setSelectedModalities}
-        setImagingLink={setImagingLink}
-        onClose={() => {
-          setShowModal(false);
-          setEditingStudyId(null);
-          setPatientId("");
-          setPatientName("");
-          setAge("");
-          setGender("");
-          setStudyDescription("");
-          setSelectedModalities(() => []);
-          setImagingLink("");
-        }}
-        onSubmit={handleSubmit}
-=======
-      {/* ADD / EDIT MODAL */}
-      <AddCaseModal
-        isOpen={showModal}
-        onClose={() => {
-          setShowModal(false);
-          setEditingStudyId(null);
-        }}
-        editingStudyId={editingStudyId}
-        onSubmit={handleSubmit}
-        patientId={patientId}
-        setPatientId={setPatientId}
-        patientName={patientName}
-        setPatientName={setPatientName}
-        age={age}
-        setAge={setAge}
-        gender={gender}
-        setGender={setGender}
-        studyDescription={studyDescription}
-        setStudyDescription={setStudyDescription}
-        reportUrl={reportUrl}
-        setReportUrl={setReportUrl}
-        mriFile={mriFile}
-        setMriFile={setMriFile}
-        petFile={petFile}
-        setPetFile={setPetFile}
-        dwiFile={dwiFile}
-        setDwiFile={setDwiFile}
-        otherModalityFile={otherModalityFile}
-        setOtherModalityFile={setOtherModalityFile}
-        docMedicalHistory={docMedicalHistory}
-        setDocMedicalHistory={setDocMedicalHistory}
-        docConsent={docConsent}
-        setDocConsent={setDocConsent}
-        docCaseReport={docCaseReport}
-        setDocCaseReport={setDocCaseReport}
-        docPatientInfo={docPatientInfo}
-        setDocPatientInfo={setDocPatientInfo}
-        docOthers={docOthers}
-        setDocOthers={setDocOthers}
-        setModality={setModality}
-        loading={loading}
->>>>>>> 92da56c6ceed0d28fd1512f51aaf66a9b05d9776
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={handleClick}
+      aria-pressed={selected}
+      className={`acm-modality-card${selected ? " acm-modality-card--active" : ""}${disabled ? " acm-modality-card--disabled" : ""}`}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        className="acm-hidden-input"
+        onChange={handleChange}
+        aria-hidden="true"
+        tabIndex={-1}
+        disabled={disabled}
       />
-
-      {/* COMMENTS MODAL */}
-      {showCommentsModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white w-full max-w-2xl rounded-[28px] shadow-2xl border border-gray-100 flex flex-col max-h-[85vh]">
-
-            {/* HEADER */}
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-[#071739]">Study Notes</h2>
-                <p className="text-sm text-gray-500 mt-1">Client ↔ Operator communication</p>
-              </div>
-              <button
-                onClick={() => setShowCommentsModal(false)}
-                className="text-gray-400 hover:text-black text-2xl"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* MESSAGES */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#fafcff]">
-              {comments.length === 0 && (
-                <p className="text-sm text-gray-500">No messages yet.</p>
-              )}
-
-              {comments.map((comment) => {
-                const isOperator = comment.user?.role === "OPERATOR";
-
-                return (
-                  <div
-                    key={comment.id}
-                    className={`flex ${isOperator ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className={`max-w-[75%] px-4 py-3 rounded-2xl shadow-sm ${
-                        isOperator
-                          ? "bg-[#071739] text-white rounded-br-md"
-                          : "bg-white border border-gray-200 text-black rounded-bl-md"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-4 mb-1">
-                        <p
-                          className={`text-xs font-semibold ${
-                            isOperator ? "text-blue-200" : "text-gray-500"
-                          }`}
-                        >
-                          {comment.user?.name}
-                        </p>
-                        <p
-                          className={`text-[11px] ${
-                            isOperator ? "text-gray-300" : "text-gray-400"
-                          }`}
-                        >
-                          {new Date(comment.createdAt).toLocaleString()}
-                        </p>
-                      </div>
-                      <p className="text-sm leading-relaxed">{comment.message}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* INPUT */}
-            <div className="p-5 border-t border-gray-100 flex gap-3">
-              <input
-                type="text"
-                placeholder="Write a message..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="flex-1 border border-gray-200 rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                onClick={handleSendMessage}
-                disabled={commentsLoading}
-                className="bg-[#071739] hover:bg-[#0b2559] text-white px-6 rounded-2xl text-sm font-medium transition"
-              >
-                {commentsLoading ? "Sending..." : "Send"}
-              </button>
-            </div>
-          </div>
-        </div>
+      <span className="acm-modality-label">{modality}</span>
+      {selected && (
+        <CheckCircle2
+          size={13}
+          className="acm-modality-check"
+          style={{ cursor: "pointer" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onFileSelect(null);
+          }}
+        />
       )}
+      {disabled && <Lock size={12} className="acm-modality-lock" />}
+      {attachedFile ? (
+        <span className="acm-modality-helper">File Attached</span>
+      ) : helperText ? (
+        <span className="acm-modality-helper">{helperText}</span>
+      ) : null}
+    </button>
+  );
+}
+
+/** Compact document upload chip */
+function DocChip({
+  slot,
+  onFiles,
+}: {
+  slot: DocumentSlot;
+  onFiles: (files: UploadedFile[]) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const hasFiles = slot.files.length > 0;
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const chosen = Array.from(e.target.files ?? []).map((f) => ({
+      name: f.name,
+      size: f.size,
+    }));
+    onFiles(chosen);
+    e.target.value = "";
+  }
+
+  return (
+    <div
+      className={`acm-doc-chip${hasFiles ? " acm-doc-chip--filled" : ""}`}
+      onClick={() => inputRef.current?.click()}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
+      aria-label={`Upload ${slot.label}`}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        className="acm-hidden-input"
+        onChange={handleChange}
+        aria-hidden="true"
+        tabIndex={-1}
+      />
+      <span className="acm-doc-chip-icon">
+        {hasFiles ? <CheckCircle2 size={14} /> : slot.icon}
+      </span>
+      <div className="acm-doc-chip-text">
+        <span className="acm-doc-chip-label">{slot.label}</span>
+        {hasFiles ? (
+          <span className="acm-doc-chip-count">
+            {slot.files.length} file{slot.files.length > 1 ? "s" : ""} ·{" "}
+            {fmtSize(slot.files.reduce((a, f) => a + f.size, 0))}
+          </span>
+        ) : (
+          <span className="acm-doc-chip-hint">Click to attach</span>
+        )}
+      </div>
+      <Upload size={13} className="acm-doc-chip-arrow" />
     </div>
   );
 }
+
+// ─── Main Modal ───────────────────────────────────────────────────────────────
+
+const MODALITIES: {
+  key: string;
+  label: string;
+  requiresMRI: boolean;
+}[] = [
+  { key: "MRI", label: "MRI", requiresMRI: false },
+  { key: "PET", label: "PET", requiresMRI: true },
+  { key: "DWI", label: "DWI", requiresMRI: true },
+  { key: "OTHER", label: "OTHER", requiresMRI: false },
+];
+
+const INITIAL_DOCS: DocumentSlot[] = [
+  {
+    key: "clinical_history",
+    label: "Clinical History",
+    icon: <BookOpen size={14} />,
+    files: [],
+  },
+  {
+    key: "consent_form",
+    label: "Consent Form",
+    icon: <ClipboardList size={14} />,
+    files: [],
+  },
+  {
+    key: "case_report",
+    label: "Case Report Form",
+    icon: <FileText size={14} />,
+    files: [],
+  },
+  {
+    key: "patient_info",
+    label: "Patient Info Sheet",
+    icon: <FileImage size={14} />,
+    files: [],
+  },
+  {
+    key: "others",
+    label: "Others",
+    icon: <Paperclip size={14} />,
+    files: [],
+  },
+];
+
+export default function AddCaseModal({
+  isOpen,
+  isEditing,
+  loading,
+  patientName,
+  patientId,
+  age,
+  gender,
+  studyDescription,
+  selectedModalities,
+  imagingLink,
+  setPatientName,
+  setPatientId,
+  setAge,
+  setGender,
+  setStudyDescription,
+  setSelectedModalities,
+  setImagingLink,
+  onClose,
+  onSubmit,
+}: AddCaseModalProps) {
+  const [docs, setDocs] = useState<DocumentSlot[]>(INITIAL_DOCS);
+  const [submitted, setSubmitted] = useState(false);
+
+  const [mriFile, setMriFile] = useState<UploadedFile | null>(null);
+  const [petFile, setPetFile] = useState<UploadedFile | null>(null);
+  const [dwiFile, setDwiFile] = useState<UploadedFile | null>(null);
+  const [otherFile, setOtherFile] = useState<UploadedFile | null>(null);
+
+  const mriSelected = selectedModalities.includes("MRI") || mriFile !== null;
+
+  function handleFileSelect(key: string, file: UploadedFile | null) {
+    if (key === "MRI") {
+      setMriFile(file);
+      if (file) {
+        setSelectedModalities((prev) => Array.from(new Set([...prev, "MRI"])));
+      } else {
+        setPetFile(null);
+        setDwiFile(null);
+        setSelectedModalities((prev) =>
+          prev.filter((m) => m !== "MRI" && m !== "PET" && m !== "DWI")
+        );
+      }
+    } else if (key === "PET") {
+      setPetFile(file);
+      if (file) {
+        setSelectedModalities((prev) => Array.from(new Set([...prev, "PET"])));
+      } else {
+        setSelectedModalities((prev) => prev.filter((m) => m !== "PET"));
+      }
+    } else if (key === "DWI") {
+      setDwiFile(file);
+      if (file) {
+        setSelectedModalities((prev) => Array.from(new Set([...prev, "DWI"])));
+      } else {
+        setSelectedModalities((prev) => prev.filter((m) => m !== "DWI"));
+      }
+    } else if (key === "OTHER") {
+      setOtherFile(file);
+      if (file) {
+        setSelectedModalities((prev) =>
+          Array.from(new Set([...prev, "OTHER"]))
+        );
+      } else {
+        setSelectedModalities((prev) => prev.filter((m) => m !== "OTHER"));
+      }
+    }
+  }
+
+  function handleDocFiles(key: string, files: UploadedFile[]) {
+    setDocs((prev) => prev.map((d) => (d.key === key ? { ...d, files } : d)));
+  }
+
+  function handleClose() {
+    setMriFile(null);
+    setPetFile(null);
+    setDwiFile(null);
+    setOtherFile(null);
+    setDocs(INITIAL_DOCS);
+    setSubmitted(false);
+    onClose();
+  }
+
+  async function handleSubmit() {
+    setSubmitted(true);
+    if (!patientName.trim() || !patientId.trim()) return;
+    await onSubmit();
+    setMriFile(null);
+    setPetFile(null);
+    setDwiFile(null);
+    setOtherFile(null);
+    setDocs(INITIAL_DOCS);
+    setSubmitted(false);
+  }
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* ── Inline styles ── */}
+      <style>{ACM_STYLES}</style>
+
+      {/* ── Backdrop ── */}
+      <div className="acm-backdrop" onClick={handleClose} aria-hidden="true" />
+
+      {/* ── Dialog ── */}
+      <div
+        className="acm-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label={isEditing ? "Edit Case" : "Add New Case"}
+      >
+        {/* ══ HEADER ══ */}
+        <div className="acm-header">
+          <div className="acm-header-left">
+            <div className="acm-header-icon">
+              <FilePlus2 size={17} />
+            </div>
+            <div>
+              <h2 className="acm-title">
+                {isEditing ? "Edit Case" : "Add New Case"}
+              </h2>
+              <p className="acm-subtitle">
+                {isEditing
+                  ? "Update patient study information"
+                  : "Register a new patient study"}
+              </p>
+            </div>
+          </div>
+          <button
+            className="acm-close"
+            onClick={handleClose}
+            aria-label="Close dialog"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* ══ BODY ══ */}
+        <div className="acm-body">
+          {/* ── LEFT COLUMN ── */}
+          <div className="acm-col acm-col-left">
+            {/* § 1 Patient Details */}
+            <section className="acm-section">
+              <div className="acm-section-header">
+                <span className="acm-section-dot acm-dot-blue" />
+                <h3 className="acm-section-title">Patient Details</h3>
+              </div>
+
+              <div className="acm-patient-grid">
+                <FieldInput
+                  id="acm-patient-name"
+                  icon={<User size={14} />}
+                  placeholder="Patient Name *"
+                  value={patientName}
+                  onChange={setPatientName}
+                />
+                <FieldInput
+                  id="acm-patient-id"
+                  icon={<Hash size={14} />}
+                  placeholder="Patient ID *"
+                  value={patientId}
+                  onChange={setPatientId}
+                />
+                <FieldInput
+                  id="acm-age"
+                  icon={<CalendarDays size={14} />}
+                  placeholder="Age"
+                  value={age}
+                  onChange={setAge}
+                  type="number"
+                />
+                <GenderSelector value={gender} onChange={setGender} />
+              </div>
+
+              {submitted && (!patientName.trim() || !patientId.trim()) && (
+                <div className="acm-validation">
+                  <AlertCircle size={13} />
+                  Patient Name and ID are required
+                </div>
+              )}
+
+              <div className="acm-textarea-wrap">
+                <FileText size={13} className="acm-textarea-icon" />
+                <textarea
+                  id="acm-study-desc"
+                  rows={2}
+                  placeholder="Study Description (optional)"
+                  value={studyDescription}
+                  onChange={(e) => setStudyDescription(e.target.value)}
+                  className="acm-textarea"
+                />
+              </div>
+            </section>
+
+            {/* § 2 Modality Uploads */}
+            <section className="acm-section">
+              <div className="acm-section-header">
+                <span className="acm-section-dot acm-dot-indigo" />
+                <h3 className="acm-section-title">Modality Uploads</h3>
+                {!mriSelected && (
+                  <span className="acm-section-badge">MRI required first</span>
+                )}
+              </div>
+
+              <div className="acm-modality-grid">
+                {MODALITIES.map((m) => {
+                  let isDisabled = false;
+                  let attachedFile: UploadedFile | null = null;
+                  let accept: string | undefined = undefined;
+
+                  if (m.key === "MRI") {
+                    attachedFile = mriFile;
+                    accept = ".dcm,.nii,.nii.gz,.zip,.tar,.gz";
+                  } else if (m.key === "PET") {
+                    attachedFile = petFile;
+                    isDisabled = mriFile === null;
+                    accept = ".dcm,.nii,.nii.gz,.zip,.tar,.gz";
+                  } else if (m.key === "DWI") {
+                    attachedFile = dwiFile;
+                    isDisabled = mriFile === null;
+                    accept = ".dcm,.nii,.nii.gz,.zip,.tar,.gz";
+                  } else if (m.key === "OTHER") {
+                    attachedFile = otherFile;
+                  }
+
+                  const isSelected =
+                    selectedModalities.includes(m.key) || attachedFile !== null;
+
+                  return (
+                    <ModalityCard
+                      key={m.key}
+                      modality={m.label}
+                      selected={isSelected}
+                      disabled={isDisabled}
+                      helperText={isDisabled ? "Needs MRI" : undefined}
+                      attachedFile={attachedFile}
+                      accept={accept}
+                      onFileSelect={(file) => handleFileSelect(m.key, file)}
+                    />
+                  );
+                })}
+              </div>
+
+              {selectedModalities.includes("MRI") &&
+                (selectedModalities.includes("PET") ||
+                  selectedModalities.includes("DWI")) && (
+                  <p className="acm-mri-hint">
+                    <ChevronRight size={12} />
+                    MRI must be removed last — deselect PET/DWI first
+                  </p>
+                )}
+            </section>
+
+            {/* § 3 Report Link */}
+            <section className="acm-section acm-section--flat">
+              <div className="acm-section-header">
+                <span className="acm-section-dot acm-dot-teal" />
+                <h3 className="acm-section-title">Report Link</h3>
+              </div>
+              <div className="acm-field">
+                <span className="acm-field-icon">
+                  <Link2 size={14} />
+                </span>
+                <input
+                  id="acm-imaging-link"
+                  type="url"
+                  placeholder="Paste PACS / Drive / imaging URL…"
+                  value={imagingLink}
+                  onChange={(e) => setImagingLink(e.target.value)}
+                  className="acm-input"
+                  autoComplete="off"
+                />
+              </div>
+            </section>
+          </div>
+
+          {/* ── RIGHT COLUMN ── */}
+          <div className="acm-col acm-col-right">
+            <section className="acm-section acm-section--full">
+              <div className="acm-section-header">
+                <span className="acm-section-dot acm-dot-violet" />
+                <h3 className="acm-section-title">Documents</h3>
+                <span className="acm-section-badge">
+                  {docs.filter((d) => d.files.length > 0).length}/{docs.length}{" "}
+                  attached
+                </span>
+              </div>
+
+              <p className="acm-doc-info">
+                Attach supporting medical documents. All formats accepted.
+              </p>
+
+              <div className="acm-doc-list">
+                {docs.map((slot) => (
+                  <DocChip
+                    key={slot.key}
+                    slot={slot}
+                    onFiles={(files) => handleDocFiles(slot.key, files)}
+                  />
+                ))}
+              </div>
+            </section>
+          </div>
+        </div>
+
+        {/* ══ FOOTER ══ */}
+        <div className="acm-footer">
+          <p className="acm-footer-note">
+            * Required fields. Documents are optional.
+          </p>
+          <div className="acm-footer-actions">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="acm-btn acm-btn-cancel"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="acm-btn acm-btn-submit"
+            >
+              {loading ? (
+                <>
+                  <span className="acm-spinner" />
+                  Saving…
+                </>
+              ) : isEditing ? (
+                "Update Case"
+              ) : (
+                "Create Case"
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Styles (scoped to .acm-* prefix) ────────────────────────────────────────
+
+const ACM_STYLES = `
+/* ── Reset & base ── */
+.acm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 49;
+  background: rgba(7, 23, 57, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.acm-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  width: calc(100vw - 48px);
+  max-width: 980px;
+  height: fit-content;
+  max-height: calc(100vh - 48px);
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow:
+    0 0 0 1px rgba(7,23,57,0.08),
+    0 24px 64px rgba(7,23,57,0.18),
+    0 8px 24px rgba(7,23,57,0.10);
+  overflow: hidden;
+  font-family: var(--font-geist-sans, 'Inter', system-ui, sans-serif);
+}
+
+/* ── Header ── */
+.acm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 13px;
+  border-bottom: 1px solid #eef0f5;
+  background: linear-gradient(to right, #f8faff, #ffffff);
+  flex-shrink: 0;
+}
+
+.acm-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.acm-header-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #071739;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.acm-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #071739;
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.acm-subtitle {
+  font-size: 11.5px;
+  color: #7a8599;
+  margin: 2px 0 0;
+}
+
+.acm-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #e8eaf0;
+  background: #f7f9fc;
+  color: #6b7280;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.acm-close:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+/* ── Body ── */
+.acm-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.acm-col {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.acm-col-left {
+  border-right: 1px solid #eef0f5;
+}
+
+.acm-col-right {
+  background: #fafbfe;
+}
+
+/* ── Section ── */
+.acm-section {
+  background: #ffffff;
+  border: 1px solid #eef0f5;
+  border-radius: 14px;
+  padding: 13px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.acm-section--flat {
+  gap: 8px;
+}
+
+.acm-section--full {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #eef0f5;
+  border-radius: 14px;
+  padding: 13px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.acm-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.acm-section-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.acm-dot-blue   { background: #3b82f6; }
+.acm-dot-indigo { background: #6366f1; }
+.acm-dot-teal   { background: #14b8a6; }
+.acm-dot-violet { background: #8b5cf6; }
+
+.acm-section-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #071739;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.acm-section-badge {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #6366f1;
+  background: #eef2ff;
+  border-radius: 20px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+/* ── Patient grid ── */
+.acm-patient-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* ── Field input ── */
+.acm-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8faff;
+  border: 1px solid #e2e8f4;
+  border-radius: 10px;
+  padding: 0 10px;
+  height: 36px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.acm-field:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+  background: #ffffff;
+}
+
+.acm-field-icon {
+  color: #94a3b8;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.acm-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 12.5px;
+  color: #1e293b;
+  outline: none;
+  min-width: 0;
+}
+.acm-input::placeholder { color: #a0aec0; }
+
+/* ── Gender selector ── */
+.acm-gender-row {
+  display: flex;
+  border: 1px solid #e2e8f4;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 36px;
+  background: #f8faff;
+}
+
+.acm-gender-btn {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  border-right: 1px solid #e2e8f4;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.acm-gender-btn:last-child { border-right: none; }
+.acm-gender-btn:hover { background: #eef2ff; color: #4f46e5; }
+.acm-gender-btn--active {
+  background: #071739;
+  color: #ffffff;
+}
+
+/* ── Validation ── */
+.acm-validation {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: #dc2626;
+  font-weight: 500;
+  padding: 4px 0 0;
+}
+
+/* ── Textarea ── */
+.acm-textarea-wrap {
+  position: relative;
+}
+
+.acm-textarea-icon {
+  position: absolute;
+  top: 9px;
+  left: 10px;
+  color: #94a3b8;
+}
+
+.acm-textarea {
+  width: 100%;
+  padding: 8px 10px 8px 28px;
+  font-size: 12.5px;
+  color: #1e293b;
+  background: #f8faff;
+  border: 1px solid #e2e8f4;
+  border-radius: 10px;
+  resize: none;
+  outline: none;
+  line-height: 1.5;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.acm-textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+  background: #ffffff;
+}
+.acm-textarea::placeholder { color: #a0aec0; }
+
+/* ── Modality grid ── */
+.acm-modality-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+
+.acm-modality-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px 6px 8px;
+  border: 1.5px solid #e2e8f4;
+  border-radius: 12px;
+  background: #f8faff;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.acm-modality-card:hover:not([disabled]) {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+.acm-modality-card--active {
+  border-color: #071739 !important;
+  background: #071739 !important;
+}
+.acm-modality-card--disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  background: #f1f4fb !important;
+}
+
+.acm-modality-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #071739;
+}
+.acm-modality-card--active .acm-modality-label { color: #ffffff; }
+.acm-modality-card--disabled .acm-modality-label { color: #94a3b8; }
+
+.acm-modality-check {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  color: #86efac;
+}
+.acm-modality-lock {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  color: #94a3b8;
+}
+.acm-modality-helper {
+  font-size: 9.5px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+.acm-modality-card--active .acm-modality-helper {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.acm-mri-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #f59e0b;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 7px;
+  padding: 5px 9px;
+  margin: 0;
+}
+
+/* ── Doc list ── */
+.acm-doc-info {
+  font-size: 11.5px;
+  color: #94a3b8;
+  margin: -4px 0 0;
+}
+
+.acm-doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  overflow: hidden;
+}
+
+.acm-hidden-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.acm-doc-chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1.5px dashed #d1d9ef;
+  border-radius: 11px;
+  background: #fafbfe;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.acm-doc-chip:hover {
+  border-color: #8b5cf6;
+  background: #f5f3ff;
+}
+.acm-doc-chip--filled {
+  border-style: solid;
+  border-color: #22c55e;
+  background: #f0fdf4;
+}
+.acm-doc-chip--filled:hover {
+  border-color: #16a34a;
+  background: #dcfce7;
+}
+
+.acm-doc-chip-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: #eef2ff;
+  color: #6366f1;
+  flex-shrink: 0;
+}
+.acm-doc-chip--filled .acm-doc-chip-icon {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.acm-doc-chip-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.acm-doc-chip-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acm-doc-chip-count {
+  font-size: 11px;
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.acm-doc-chip-hint {
+  font-size: 11px;
+  color: #a0aec0;
+}
+
+.acm-doc-chip-arrow {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.acm-doc-chip:hover .acm-doc-chip-arrow { color: #8b5cf6; }
+.acm-doc-chip--filled .acm-doc-chip-arrow { color: #22c55e; }
+
+/* ── Footer ── */
+.acm-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 20px;
+  border-top: 1px solid #eef0f5;
+  background: linear-gradient(to right, #f8faff, #fafbfe);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.acm-footer-note {
+  font-size: 11px;
+  color: #a0aec0;
+  margin: 0;
+}
+
+.acm-footer-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.acm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 18px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.acm-btn-cancel {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f4;
+  color: #475569;
+}
+.acm-btn-cancel:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.acm-btn-submit {
+  background: #071739;
+  border: 1.5px solid #071739;
+  color: #ffffff;
+}
+.acm-btn-submit:hover:not(:disabled) {
+  background: #0b2559;
+  border-color: #0b2559;
+  box-shadow: 0 4px 12px rgba(7,23,57,0.22);
+  transform: translateY(-1px);
+}
+.acm-btn-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Spinner ── */
+.acm-spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: acm-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes acm-spin { to { transform: rotate(360deg); } }
+`;

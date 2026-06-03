@@ -1,6 +1,6 @@
 "use client";
 
-<<<<<<< HEAD
+
 import { useRef, useState } from "react";
 import {
   X,
@@ -1257,7 +1257,7 @@ const ACM_STYLES = `
 }
 @keyframes acm-spin { to { transform: rotate(360deg); } }
 `;
-
+=======
 import {
     X,
     User,
