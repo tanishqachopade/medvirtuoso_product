@@ -8,6 +8,49 @@ type Params = {
   }>;
 };
 
+export async function GET(
+  request: Request,
+  { params }: Params
+) {
+  try {
+    const { id } = await params;
+
+    const study =
+      await prisma.study.findUnique({
+        where: {
+          id,
+        },
+
+        include: {
+          patient: true,
+          report: true,
+          files: true,
+        },
+      });
+
+    if (!study) {
+      return NextResponse.json(
+        { error: "Study not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(study);
+
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      {
+        error: "Failed to fetch study",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
+
 export async function DELETE(
   request: Request,
   { params }: Params

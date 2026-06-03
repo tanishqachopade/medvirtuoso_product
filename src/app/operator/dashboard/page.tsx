@@ -11,8 +11,9 @@ import {
   MessageSquare,
   AlertTriangle,
   CheckCircle2,
-  Download,
+  FileUp,
   Pencil,
+  Download,
 } from "lucide-react";
 
 export default function OperatorDashboard() {
@@ -144,6 +145,37 @@ export default function OperatorDashboard() {
           )
       );
     });
+
+    // =========================
+// DOWNLOAD FILES
+// =========================
+function downloadFiles(
+  study: any
+) {
+
+  if (
+    !study.files ||
+    study.files.length === 0
+  ) {
+
+    alert(
+      "No files uploaded"
+    );
+
+    return;
+  }
+
+  study.files.forEach(
+    (file: any) => {
+
+      window.open(
+        file.fileUrl,
+        "_blank"
+      );
+
+    }
+  );
+}
 
   // =========================
   // STATUS UPDATE
@@ -636,9 +668,23 @@ export default function OperatorDashboard() {
                   </td>
 
                   {/* ACTIONS */}
+
+                  
                   <td className="px-6 py-4">
 
                     <div className="flex items-center gap-2">
+
+                      <button
+  onClick={() =>
+    downloadFiles(study)
+  }
+  className="p-2 rounded-xl hover:bg-blue-50 transition"
+>
+  <Download
+    size={17}
+    className="text-blue-600"
+  />
+</button>
 
                       <button
                         onClick={handleOpenViewer}
@@ -757,7 +803,7 @@ export default function OperatorDashboard() {
                           }}
                         />
 
-                        <Download
+                        <FileUp
                           size={17}
                           className="text-green-600"
                         />

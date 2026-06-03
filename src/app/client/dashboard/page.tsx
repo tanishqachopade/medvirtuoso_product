@@ -2,6 +2,7 @@
 
 import WorklistToolbar from "@/components/client-dashboard/WorklistToolbar";
 import AddCaseModal from "@/components/client-dashboard/AddCaseModal";
+import { useRouter } from "next/navigation";
 
 import {
   useEffect,
@@ -31,7 +32,11 @@ import {
 } from "lucide-react";
 
 export default function ClientDashboard() {
+
+  const router = useRouter();
+
   const [showModal, setShowModal] = useState(false);
+
   const [editingStudyId, setEditingStudyId] = useState<string | null>(null);
 
   // COMMENTS STATES
@@ -85,11 +90,12 @@ export default function ClientDashboard() {
 
       const data = await response.json();
 
-      if (data && data.length > 0) {
-        setStudies(data);
-      } else {
-        throw new Error("No data returned");
-      }
+
+if (Array.isArray(data)) {
+  setStudies(data);
+} else {
+  throw new Error("Invalid API response");
+}
     } catch (error) {
       console.error("API failed or unconfigured, seeding mock studies:", error);
       setStudies([
@@ -255,17 +261,54 @@ export default function ClientDashboard() {
   // =========================
   // DELETE FUNCTION
   // =========================
-  async function handleDelete(id: string) {
-    try {
-      setStudies((prevStudies) =>
-        prevStudies.filter((study) => study.id !== id)
+
+  async function handleDelete(
+  id: string
+) {
+  try {
+
+    const confirmed =
+      window.confirm(
+        "Delete this study?"
       );
-      alert("Study deleted successfully");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to delete study");
+
+    if (!confirmed) {
+      return;
     }
+
+    const response =
+      await fetch(
+        `/api/studies/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error
+      );
+    }
+
+    await fetchStudies();
+
+    alert(
+      "Study deleted successfully"
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Failed to delete study"
+    );
   }
+}
+  
 
   // =========================
   // SUBMIT FUNCTION
@@ -286,63 +329,106 @@ export default function ClientDashboard() {
 
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      if (editingStudyId) {
-        // UPDATE EXISTING STUDY
-        setStudies((prevStudies) =>
-          prevStudies.map((study) => {
-            if (study.id === editingStudyId) {
-              return {
-                ...study,
-                patient: {
-                  ...study.patient,
-                  patientId,
-                  patientName,
-                  age,
-                  gender,
-                },
-                studyDescription,
-                modality: selectedModalities.join(", "),
-                imagingLink,
-                report: reportUrl
-                  ? {
-                      id: study.report?.id || "report_" + Date.now(),
-                      reportUrl,
-                    }
-                  : null,
-              };
-            }
-            return study;
-          })
-        );
+         if (editingStudyId) {
 
-        alert("Study updated successfully");
-      } else {
-        // CREATE NEW STUDY
-        const newStudy = {
-          id: "study_" + Date.now(),
-          patient: {
-            patientId,
-            patientName,
-            age,
-            gender,
-          },
-          studyDescription,
-          modality: selectedModalities.join(", "),
-          status: "UPLOADED",
-          createdAt: new Date().toISOString(),
-          imagingLink,
-          report: reportUrl
-            ? {
-                id: "report_" + Date.now(),
-                reportUrl,
-              }
-            : null,
-        };
+  const response = await fetch(
+    `/api/studies/${editingStudyId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        patientId,
+        patientName,
+        studyDescription,
+        modality: selectedModalities.join(", "),
+        imagingLink,
+      }),
+    }
+  );
 
-        setStudies((prevStudies) => [newStudy, ...prevStudies]);
-        alert("Study created successfully");
-      }
+  const data = await response.json();
 
+  if (!response.ok) {
+    throw new Error(data.error);
+  }
+
+  await fetchStudies();
+
+  alert("Study updated successfully");
+}
+         
+else {
+
+  const response = await fetch("/api/studies", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      patientId,
+      patientName,
+      studyDescription,
+      modality: selectedModalities.join(", "),
+      imagingLink,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error);
+  }
+
+  const studyId = data.study.id;
+
+  const filesToUpload = [
+
+    mriFile,
+    petFile,
+    dwiFile,
+    otherModalityFile,
+
+    docMedicalHistory,
+    docConsent,
+    docCaseReport,
+    docPatientInfo,
+    docOthers,
+
+  ].filter(Boolean);
+
+  for (const file of filesToUpload) {
+
+    const formData =
+      new FormData();
+
+    formData.append(
+      "file",
+      file as File
+    );
+
+    const uploadResponse =
+      await fetch(
+        `/api/studies/${studyId}/files`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+    if (!uploadResponse.ok) {
+      throw new Error(
+        "Failed to upload file"
+      );
+    }
+  }
+
+  await fetchStudies();
+
+  alert("Study created successfully");
+}
+   
       // RESET FORM
       setPatientId("");
       setPatientName("");
@@ -495,16 +581,11 @@ export default function ClientDashboard() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() =>
-                          window.open(
-                            "http://localhost:6080/vnc.html?autoconnect=true&resize=scale",
-                            "_blank"
-                          )
-                        }
-                        className="p-2 rounded-lg hover:bg-blue-50 transition"
-                      >
-                        <Eye size={17} className="text-blue-600" />
-                      </button>
+  onClick={() => router.push(`/viewer/${study.id}`)}
+  className="p-2 rounded-lg hover:bg-blue-50 transition"
+>
+  <Eye size={17} className="text-blue-600" />
+</button>
 
                       <button
                         onClick={() => handleEdit(study)}

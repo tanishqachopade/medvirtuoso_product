@@ -87,6 +87,7 @@ export async function POST(
         include: {
   patient: true,
   report: true,
+  files: true,
 },
       });
 
@@ -120,6 +121,7 @@ export async function GET() {
         include: {
   patient: true,
   report: true,
+  files: true,
 },
 
         orderBy: {
