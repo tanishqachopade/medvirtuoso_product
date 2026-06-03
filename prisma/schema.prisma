@@ -40,17 +40,26 @@ model Site {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  name          String
-  email         String   @unique
-  password      String
-  role          UserRole
+  id       String   @id @default(cuid())
+
+  name     String
+  email    String   @unique
+  password String
+
+  role     UserRole
+
   institutionId String
-  createdAt     DateTime @default(now())
+
+  assignedOperatorId String?
+
+  assignedOperator User? @relation("OperatorAssignments", fields: [assignedOperatorId], references: [id])
+
+  assignedDoctors User[] @relation("OperatorAssignments")
 
   institution Institution @relation(fields: [institutionId], references: [id])
 
   studies Study[]
+
   comments StudyComment[]
 }
 
