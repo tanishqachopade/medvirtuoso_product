@@ -17,6 +17,7 @@ import {
   MessageSquare,
   Download,
   CheckCircle2,
+  FolderOpen,
 } from "lucide-react";
 
 export default function ClientDashboard() {
@@ -36,6 +37,9 @@ export default function ClientDashboard() {
   const [comments, setComments] = useState<any[]>([]);
   const [message, setMessage] = useState("");
   const [commentsLoading, setCommentsLoading] = useState(false);
+
+  const [showFilesModal, setShowFilesModal] = useState(false);
+const [selectedFiles, setSelectedFiles] = useState<any[]>([]);
 
   // FORM STATES
   const [patientId, setPatientId] = useState("");
@@ -297,6 +301,11 @@ export default function ClientDashboard() {
     }
   }
 
+  function openFilesModal(files: any[]) {
+  setSelectedFiles(files || []);
+  setShowFilesModal(true);
+}
+
   // =========================
   // SUBMIT FUNCTION
   // =========================
@@ -528,24 +537,15 @@ export default function ClientDashboard() {
 
                   {/* UPLOADED FILES — " filename" */}
                   <td className="px-6 py-4">
-                    {study.files && study.files.length > 0 ? (
-                      <div className="space-y-1">
-                        {study.files.map((f: any) => (
-                          <div
-                            key={f.id}
-                            className="flex items-center gap-1.5 text-[11px] text-green-700 font-medium"
-                          >
-                            <CheckCircle2 size={11} className="text-green-500 shrink-0" />
-                            <span className="truncate max-w-[140px]">
-                              {f.fileName}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-gray-400 text-xs">No files</span>
-                    )}
-                  </td>
+  <button
+    onClick={() => openFilesModal(study.files)}
+    title={`View ${study.files?.length || 0} files`}
+    className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+  >
+    <FolderOpen size={18} />
+    <span>{study.files?.length || 0}</span>
+  </button>
+</td>
 
                   <td className="px-6 py-4">
                     <span
@@ -671,6 +671,67 @@ export default function ClientDashboard() {
         assignedDoctorName={currentUser?.name}
         existingFiles={existingFiles}
       />
+
+      {showFilesModal && (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+
+    <div className="bg-white rounded-3xl w-full max-w-xl p-6">
+
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-xl font-semibold">
+          Uploaded Files
+        </h2>
+
+        <button
+          onClick={() => setShowFilesModal(false)}
+          className="text-2xl text-gray-500"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="space-y-2 max-h-96 overflow-y-auto">
+
+        {selectedFiles.length === 0 ? (
+          <p className="text-gray-500">
+            No files uploaded.
+          </p>
+        ) : (
+          selectedFiles.map((file) => (
+            <div
+              key={file.id}
+              className="border rounded-xl p-3 flex items-center justify-between"
+            >
+              <span className="text-sm truncate">
+                {file.fileName}
+              </span>
+
+              <a
+                href={`/api/files/${file.id}`}
+                target="_blank"
+                className="text-blue-600 text-sm"
+              >
+                Download
+              </a>
+            </div>
+          ))
+        )}
+
+      </div>
+
+      <div className="flex justify-end mt-5">
+        <button
+          onClick={() => setShowFilesModal(false)}
+          className="border px-4 py-2 rounded-xl"
+        >
+          Close
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+)}
 
       {/* COMMENTS MODAL */}
       {showCommentsModal && (

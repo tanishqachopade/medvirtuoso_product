@@ -15,6 +15,7 @@ import {
   Pencil,
   Download,
   Stethoscope,
+  FolderOpen,
 } from "lucide-react";
 
 export default function OperatorDashboard() {
@@ -35,6 +36,14 @@ export default function OperatorDashboard() {
 
   const [operator, setOperator] =
     useState<any>(null);
+
+    const [showFilesModal, setShowFilesModal] =
+  useState(false);
+
+const [selectedFiles, setSelectedFiles] =
+  useState<any[]>([]);
+
+    
 
   // =========================
   // COMMENTS
@@ -168,6 +177,10 @@ export default function OperatorDashboard() {
   // =========================
   // DOWNLOAD FILES (ZIP archive download)
   // =========================
+{/* FILES */}
+// =========================
+// DOWNLOAD FILES
+// =========================
 function downloadFiles(study: any) {
   const link = document.createElement("a");
 
@@ -182,6 +195,11 @@ function downloadFiles(study: any) {
   link.click();
 
   document.body.removeChild(link);
+}
+
+function openFilesModal(files: any[]) {
+  setSelectedFiles(files || []);
+  setShowFilesModal(true);
 }
   // =========================
   // STATUS UPDATE
@@ -471,20 +489,20 @@ function downloadFiles(study: any) {
                     </td>
 
                     {/* FILES */}
-                    <td className="px-6 py-4">
-                      {study.files && study.files.length > 0 ? (
-                        <div className="space-y-1">
-                          {study.files.map((f: any) => (
-                            <div key={f.id} className="flex items-center gap-1.5 text-xs text-green-700 bg-green-50 border border-green-100 rounded-lg px-2 py-1 max-w-[160px]">
-                              <span className="text-green-500 font-bold shrink-0">✓</span>
-                              <span className="truncate font-medium">{f.fileName}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-xs">No files</span>
-                      )}
-                    </td>
+                    {/* FILES */}
+<td className="px-6 py-4">
+  <button
+    onClick={() => openFilesModal(study.files)}
+    title={`View ${study.files?.length || 0} files`}
+    className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+  >
+    <FolderOpen size={18} />
+
+    <span className="text-sm font-medium">
+      {study.files?.length || 0}
+    </span>
+  </button>
+</td>
 
                     {/* LINK */}
                     <td className="px-6 py-4">
