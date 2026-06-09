@@ -46,7 +46,7 @@ async function main() {
       password:
         hashedPassword,
 
-      role: UserRole.CLIENT,
+      role: UserRole.CLIENT_MANAGER,
 
       institutionId:
         institution.id,

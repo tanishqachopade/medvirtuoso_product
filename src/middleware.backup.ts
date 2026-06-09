@@ -43,9 +43,20 @@ export async function middleware(req: NextRequest) {
     const role = verified.role as string;
 
     const getRoleHomepage = (r: string) => {
-      if (r === "ADMIN") return "/admin";
-      if (r === "OPERATOR") return "/operator/dashboard";
-      return "/client/dashboard"; // CLIENT role
+      if (
+        r === "MASTER_ADMIN" ||
+        r === "CLIENT_ADMIN" ||
+        r === "OPERATIONS_HEAD" ||
+        r === "OPERATIONS_MANAGER"
+      ) 
+      {
+        return "/admin";
+      }
+      if (r === "OPERATOR") 
+      {
+        return "/operator/dashboard";
+      }
+      return "/client/dashboard";
     };
 
     const homepage = getRoleHomepage(role);
@@ -56,17 +67,33 @@ export async function middleware(req: NextRequest) {
     }
 
     // Role access authorization check
-    if (isAdminRoute && role !== "ADMIN") {
-      return NextResponse.redirect(new URL(homepage, req.url));
-    }
+    if (
+      isAdminRoute &&
+      ![
+        "MASTER_ADMIN",
+        "CLIENT_ADMIN",
+        "OPERATIONS_HEAD",
+        "OPERATIONS_MANAGER"
+      ].includes(role)
+    ) {
+  return NextResponse.redirect(new URL(homepage, req.url));
+}
 
     if (isOperatorRoute && role !== "OPERATOR") {
       return NextResponse.redirect(new URL(homepage, req.url));
     }
 
-    if (isClientRoute && role !== "CLIENT") {
-      return NextResponse.redirect(new URL(homepage, req.url));
-    }
+    if (
+      isClientRoute &&
+      ![
+        "CLIENT_MANAGER",
+        "SITE_ADMIN",
+        "TECHNICIAN",
+        "DOCTOR"
+      ].includes(role)
+    ) {
+  return NextResponse.redirect(new URL(homepage, req.url));
+}
   }
 
   // Prevent logged-in users from visiting login page
@@ -75,11 +102,14 @@ export async function middleware(req: NextRequest) {
     if (verified) {
       const role = verified.role as string;
       const homepage =
-        role === "ADMIN"
-          ? "/admin"
-          : role === "OPERATOR"
-          ? "/operator/dashboard"
-          : "/client/dashboard";
+       role === "MASTER_ADMIN" ||
+       role === "CLIENT_ADMIN" ||
+       role === "OPERATIONS_HEAD" ||
+       role === "OPERATIONS_MANAGER"
+        ? "/admin"
+        : role === "OPERATOR"
+        ? "/operator/dashboard"
+        : "/client/dashboard";
       return NextResponse.redirect(new URL(homepage, req.url));
     }
   }

@@ -3,14 +3,24 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url  	    = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum UserRole {
-  CLIENT
+  // Client Side
+  CLIENT_MANAGER
+  SITE_ADMIN
+  SITE_MANAGER
+  TECHNICIAN
+  DOCTOR
+
+  // MedMarvel Side
+  MASTER_ADMIN
+  CLIENT_ADMIN
+  OPERATIONS_HEAD
+  OPERATIONS_MANAGER
   OPERATOR
-  ADMIN
 }
 
 enum StudyStatus {
@@ -36,9 +46,8 @@ model Site {
 
   institution Institution @relation(fields: [institutionId], references: [id])
 
+  users   User[]
   studies Study[]
-
-  users User[]
 }
 
 model User {
@@ -53,26 +62,36 @@ model User {
   institutionId String
   siteId        String?
 
-  assignedOperatorId String?
-
-  assignedOperator User? @relation("OperatorAssignments", fields: [assignedOperatorId], references: [id])
-
-  assignedDoctors User[] @relation("OperatorAssignments")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   institution Institution @relation(fields: [institutionId], references: [id])
 
   site Site? @relation(fields: [siteId], references: [id])
 
-  studies Study[]
+  // Technician uploads
+  uploadedStudies Study[] @relation("TechnicianStudies")
+
+  // Doctor assigned studies
+  doctorStudies Study[] @relation("DoctorStudies")
+
+  // Operator assigned studies
+  operatorStudies Study[] @relation("OperatorStudies")
 
   comments StudyComment[]
 }
 
 model Patient {
-  id          String   @id @default(cuid())
+  id String @id @default(cuid())
+
   patientId   String
   patientName String
-  createdAt   DateTime @default(now())
+
+  age    Int?
+  gender String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   studies Study[]
 }
@@ -87,7 +106,10 @@ model Study {
 
   patientId String?
   siteId    String
-  userId    String
+
+  technicianId String?
+  doctorId     String?
+  operatorId   String?
 
   imagingLink String?
 
@@ -98,7 +120,11 @@ model Study {
 
   site Site @relation(fields: [siteId], references: [id])
 
-  user User @relation(fields: [userId], references: [id])
+  technician User? @relation("TechnicianStudies", fields: [technicianId], references: [id])
+
+  doctor User? @relation("DoctorStudies", fields: [doctorId], references: [id])
+
+  operator User? @relation("OperatorStudies", fields: [operatorId], references: [id])
 
   files StudyFile[]
 
@@ -115,6 +141,8 @@ model StudyFile {
   fileName String
   fileUrl  String
   fileType String
+
+  // Supports folder uploads
   folderPath String?
 
   createdAt DateTime @default(now())

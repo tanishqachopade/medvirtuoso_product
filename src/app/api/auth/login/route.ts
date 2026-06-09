@@ -26,6 +26,10 @@ export async function POST(req: Request) {
           email,
         },
       });
+      console.log("LOGIN EMAIL:", email);
+      console.log("USER FOUND:", !!user);
+      console.log("USER ROLE:", user?.role);
+      console.log("HASH:", user?.password);
 
     if (!user) {
       return NextResponse.json(
@@ -41,7 +45,7 @@ export async function POST(req: Request) {
         password,
         user.password
       );
-
+    console.log("PASSWORD VALID:", passwordValid);
     if (!passwordValid) {
       return NextResponse.json(
         {
